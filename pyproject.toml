@@ -1,0 +1,24 @@
+[tool.ruff]
+line-length = 120
+show-fixes = true
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "UP", "B", "SIM", "I", "D4", "TID252"]
+
+[tool.ruff.lint.isort]
+case-sensitive = true
+section-order = ["django", "third-party", "future", "standard-library", "first-party", "local-folder"]
+
+[tool.ruff.lint.isort.sections]
+"django" = ["django"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.ruff.format]
+docstring-code-format = true
+quote-style = "single"

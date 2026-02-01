@@ -1,0 +1,50 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[requires]
+python_version = "3.13"
+
+[packages]
+django = "==5.2.10"
+django-environ = "==0.12.0"
+discord.py = "==2.6.4"
+sentry-sdk = "==2.51.0"
+psycopg = {extras = ["binary"], version = "==3.3.2"}
+httpx = "==0.28.1"
+gunicorn = "*"
+uvloop = "*"
+
+[dev-packages]
+factory-boy = "==3.3.3"
+coverage = "*"
+ruff = "==0.14.14"
+
+[scripts]
+start = "gunicorn -c /app/.box/etc/gunicorn.py core.wsgi:application"
+start-dev = "./manage.py runserver 0.0.0.0:8000"
+build = """sh -c '
+    ./manage.py collectstatic --no-input
+    ./manage.py migrate --no-input
+'
+"""
+build-dev = """sh -c '
+    ./manage.py migrate --no-input
+'
+"""
+test = """sh -c '
+    coverage run ./manage.py test --no-input
+    code=$?
+    coverage report -m
+    exit $code
+'
+"""
+format = """sh -c '
+    ruff check --fix
+    code=$?
+    ruff format
+    exit $code
+'
+"""
+migrate = "./manage.py migrate --no-input"

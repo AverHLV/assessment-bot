@@ -1,0 +1,40 @@
+x-base: &base-backend
+  build:
+    target: base
+    context: .
+    args:
+      USER_ID: ${RUN_AS_USER:-1000}
+  env_file: ./.env
+  volumes:
+    - venv_data:/opt/venv
+    - ./:/app:delegated
+  networks:
+    - default
+  depends_on:
+    postgres:
+      condition: service_started
+
+services:
+  app:
+    <<: *base-backend
+    hostname: assessment-bot.service
+    ports:
+      - ${EXPOSE_APP_PORT:-8000}:8000
+    command: pipenv run start-dev
+
+  postgres:
+    image: postgres:18.1-alpine
+    ports:
+      - ${EXPOSE_POSTGRES_PORT:-5432}:5432
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+volumes:
+  venv_data:
+    driver: local
+  postgres_data:
+    driver: local

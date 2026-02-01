@@ -1,0 +1,9 @@
+*
+!/.box
+!/api
+!/core
+!/static
+!/Dockerfile
+!/manage.py
+!/Pipfile
+!/Pipfile.lock

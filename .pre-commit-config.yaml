@@ -1,0 +1,7 @@
+repos:
+  - repo: local
+    hooks:
+      - id: format-code
+        name: Lint and format code
+        entry: make project@format
+        language: system
