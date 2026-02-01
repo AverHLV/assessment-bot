@@ -1,0 +1,49 @@
+name: CI/CD
+
+on:
+  push:
+    branches: ["dev", "main"]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:18.1-alpine
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: app
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -h 127.0.0.1 -U app -d app"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13.11"
+          cache: "pipenv"
+
+      - name: Install pipenv and dependencies
+        run: |
+          pip install --no-cache-dir pipenv==2026.0.3
+          pipenv sync --dev
+
+      - name: Run tests
+        env:
+          APP_DB_URL: postgres://app:app@localhost:5432/app
+        run: pipenv run test
