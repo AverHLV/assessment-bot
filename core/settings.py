@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     # own
     'api.assessment',
     'api.user',
+    'bot',
 ]
 
 MIDDLEWARE = [
@@ -70,6 +71,8 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Feature vars
 
 FEATURE_SENTRY = env.bool('APP_FEATURE_SENTRY', default=True)
+
+FEATURE_BOT_IDLE = env.bool('APP_FEATURE_BOT_IDLE', default=False)
 
 
 # Proxy related settings
@@ -113,6 +116,11 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+# Bot
+
+BOT_TOKEN = env('APP_BOT_TOKEN', default='token')
+
+
 # Logging
 
 LOGGING = {
@@ -150,6 +158,9 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
+        },
+        'httpx': {
+            'level': 'WARNING',
         },
     },
 }

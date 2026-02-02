@@ -1,6 +1,7 @@
 *
 !/.box
 !/api
+!/bot
 !/core
 !/static
 !/Dockerfile
