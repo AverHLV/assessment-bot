@@ -6,4 +6,13 @@ from api.user import models
 
 @admin.register(models.User)
 class UserAdmin(BaseUserAdmin):
-    list_display = BaseUserAdmin.list_display + ('is_superuser',)
+    list_display = BaseUserAdmin.list_display + ('external_id', 'is_superuser')
+    search_fields = BaseUserAdmin.search_fields + ('id', 'external_id')
+    fieldsets = BaseUserAdmin.fieldsets + (
+        (
+            'Custom fields',
+            {
+                'fields': ('external_id',),
+            },
+        ),
+    )

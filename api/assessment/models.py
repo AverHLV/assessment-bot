@@ -5,6 +5,7 @@ from django.db import models
 
 from decimal import Decimal
 
+from api.assessment import managers
 from core.models import Directory, TimeStamped
 
 User = get_user_model()
@@ -40,6 +41,8 @@ class Media(TimeStamped):
     assessment_status = models.CharField(choices=AssessmentStatus, default=AssessmentStatus.INITIAL)
     assessment_until_dt = models.DateTimeField(blank=True, null=True)
     category = models.ForeignKey(MediaCategory, on_delete=models.PROTECT, related_name='media')
+
+    objects = managers.MediaQuerySet.as_manager()
 
     class Meta:
         constraints = [
