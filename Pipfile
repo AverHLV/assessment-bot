@@ -14,6 +14,7 @@ sentry-sdk = "==2.51.0"
 psycopg = {extras = ["binary"], version = "==3.3.2"}
 httpx = "==0.28.1"
 gunicorn = "*"
+whitenoise = "*"
 uvloop = "*"
 
 [dev-packages]
@@ -28,7 +29,6 @@ start-bot = "./manage.py start_bot"
 start-dev-bot = "./manage.py start_bot"
 build = """sh -c '
     ./manage.py collectstatic --no-input
-    ./manage.py migrate --no-input
 '
 """
 build-dev = """sh -c '
@@ -50,3 +50,4 @@ format = """sh -c '
 '
 """
 migrate = "./manage.py migrate --no-input"
+collectstatic = "./manage.py collectstatic --no-input"
