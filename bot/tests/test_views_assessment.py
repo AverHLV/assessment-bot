@@ -108,4 +108,4 @@ class MediaSelectTestCase(SimpleTestCase):
         modal = args[0]
         self.assertEqual(modal.user, self.user)
         self.assertEqual(modal.media_id, int(self.media_id))
-        values_mock.assert_called_once()
+        values_mock.get.assert_called_once()
