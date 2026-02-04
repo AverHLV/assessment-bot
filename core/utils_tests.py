@@ -6,6 +6,15 @@ import sentry_sdk
 import logging
 
 
+def get_log_record(**kwargs) -> logging.LogRecord:
+    data = {
+        'msg': 'message',
+        'levelname': logging.getLevelName(logging.INFO),
+        **kwargs,
+    }
+    return logging.makeLogRecord(data)
+
+
 class TestRunner(DiscoverRunner):
     def run_tests(self, test_labels, **kwargs):
         logging.disable(logging.CRITICAL)

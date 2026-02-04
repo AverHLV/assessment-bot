@@ -33,6 +33,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'core.middleware.HealthCheckMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -136,16 +137,19 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'console': {
-            '()': 'django.utils.log.ServerFormatter',
-            'format': '[{server_time}] [{levelname}] {message}',
-            'style': '{',
-        }
+        'json': {
+            '()': 'core.formatters.JSONFormatter',
+        },
+    },
+    'filters': {
+        'health-check-ignore': {
+            '()': 'core.filters.HealthCheckIgnoreFilter',
+        },
     },
     'handlers': {
         'console': {
             '()': 'logging.StreamHandler',
-            'formatter': 'console',
+            'formatter': 'json',
         },
     },
     'root': {
@@ -160,6 +164,7 @@ LOGGING = {
         },
         'gunicorn.access': {
             'handlers': ['console'],
+            'filters': ['health-check-ignore'],
             'level': 'INFO',
             'propagate': False,
         },
@@ -204,7 +209,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 if FEATURE_SENTRY:
     SENTRY_DSN = env('APP_SENTRY_DSN', default='')
     SENTRY_SAMPLE_RATE = env.float('APP_SENTRY_SAMPLE_RATE', default=0.5)
-    sentry_sampler_exclude_regex = re.compile(rf'^(/admin/|{STATIC_URL})')
+    sentry_sampler_exclude_regex = re.compile(rf'^(/liveness/|/readiness/|/admin/|{STATIC_URL})')
 
     def sentry_traces_sampler(context: dict) -> float:
         """Determine sample rate based on transaction context."""
