@@ -37,7 +37,7 @@ COPY . /app
 RUN ls -la /app
 
 USER root
-RUN pipenv install --deploy && pipenv run build
+RUN pipenv install --deploy
 
 USER $USER_NAME
 
