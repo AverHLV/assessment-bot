@@ -1,6 +1,6 @@
 # assessment-bot
 
-A backend for a Discord bot to store assessments of different pieces of art (movies, series, books, etc.).
+Backend for a Discord bot to store assessments of different pieces of art (movies, series, books, etc.).
 
 ## Project
 
