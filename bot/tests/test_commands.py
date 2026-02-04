@@ -1,59 +1,64 @@
-from django.conf import settings
-from django.core.management import call_command
-from django.test import TestCase, override_settings
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+from django.utils import timezone
 
-from asgiref.sync import async_to_sync
+from asgiref.sync import sync_to_async
 
-from unittest.mock import AsyncMock, patch
+from datetime import timedelta
+from unittest.mock import AsyncMock
 
-from bot.management.commands.start_bot import Command as AssessmentBotCommand
+from api.assessment.models import Media
+from api.assessment.tests.factories import AssessmentFactory, MediaFactory
+from api.user.tests.factories import UserFactory
+from bot import commands
+
+User = get_user_model()
 
 
-class ExitFromCommand(BaseException):
-    """Exception for exiting command loop."""
+class RateTestCase(TestCase):
+    def setUp(self):
+        self.interaction = AsyncMock()
 
-    pass
+    async def test__rate(self):
+        user = await sync_to_async(UserFactory.create)()
+        media = await sync_to_async(MediaFactory.create_batch)(
+            size=3,
+            assessment_status=Media.AssessmentStatus.IN_PROGRESS,
+            assessment_until_dt=timezone.now() + timedelta(days=1),
+        )
+        await sync_to_async(AssessmentFactory.create)(media=media[-1], user=user)
 
+        selected_media = media[:-1]
+        self.interaction.user.id = user.external_id
 
-class AssessmentBotTestCase(TestCase):
-    def test__assessment_bot__command(self):
-        with patch.object(AssessmentBotCommand, 'handle_async', new_callable=AsyncMock) as mock:
-            call_command('start_bot')
-        mock.assert_called_once()
+        await commands.rate.callback(self.interaction)
 
-    @patch('bot.management.commands.start_bot.bot', new_callable=AsyncMock)
-    @async_to_sync
-    async def test__assessment_bot(self, bot_mock):
-        bot_mock.start.side_effect = ExitFromCommand
+        self.interaction.response.send_message.assert_called_once()
+        args, kwargs = self.interaction.response.send_message.call_args
+        self.assertEqual(args[0], 'Choose a story from the ashes...')
+        self.assertTrue(kwargs['ephemeral'])
 
-        with self.assertRaises(ExitFromCommand):
-            await AssessmentBotCommand().handle_async()
+        view_elements = kwargs['view']._children
+        self.assertEqual(len(view_elements), 1)
+        media_select = view_elements[0]
+        self.assertEqual(media_select.user.id, user.id)
+        options = media_select._underlying.options
+        self.assertEqual(len(options), len(selected_media))
+        for n, option in enumerate(options):
+            media_obj = selected_media[n]
+            self.assertEqual(option.label, media_obj.name)
+            self.assertEqual(option.value, str(media_obj.id))
+            self.assertEqual(option.description, media_obj.category.name)
 
-        bot_mock.start.assert_called_once_with(settings.BOT_TOKEN)
+    async def test__rate__no_media(self):
+        self.interaction.user.id = 100
+        self.interaction.user.name = 'Discord user'
 
-    @patch('asyncio.sleep', new_callable=AsyncMock)
-    @patch('bot.management.commands.start_bot.bot', new_callable=AsyncMock)
-    @async_to_sync
-    async def test__assessment_bot__restart(self, bot_mock, sleep_mock):
-        bot_mock.start.side_effect = ValueError('error'), ExitFromCommand
+        await commands.rate.callback(self.interaction)
 
-        with self.assertRaises(ExitFromCommand):
-            await AssessmentBotCommand().handle_async()
+        user = await User.objects.filter(external_id=self.interaction.user.id).afirst()
+        self.assertIsNotNone(user)
+        self.assertEqual(user.username, self.interaction.user.name)
 
-        self.assertEqual(bot_mock.start.call_count, 2)
-        sleep_mock.assert_called_once()
-
-    @patch('asyncio.sleep', new_callable=AsyncMock)
-    @patch('bot.management.commands.start_bot.bot', new_callable=AsyncMock)
-    @async_to_sync
-    async def test__assessment_bot__idle(self, bot_mock, sleep_mock):
-        sleep_mock.side_effect = ExitFromCommand
-
-        with (
-            override_settings(FEATURE_BOT_IDLE=True),
-            self.assertRaises(ExitFromCommand),
-        ):
-            await AssessmentBotCommand().handle_async()
-
-        sleep_mock.assert_called_once()
-        bot_mock.start.assert_not_called()
+        expected_message = 'The ashes are silent... There is nothing left for you to judge.'
+        self.interaction.response.send_message.assert_called_once_with(expected_message, ephemeral=True)

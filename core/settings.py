@@ -119,6 +119,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Bot
 
 BOT_TOKEN = env('APP_BOT_TOKEN', default='token')
+BOT_PAGE_SIZE = 25
 
 
 # Logging

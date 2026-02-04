@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 
 import discord
@@ -15,7 +16,7 @@ async def rate(interaction: discord.Interaction) -> None:
     media = (
         Media.objects.for_assessment(user_id=user.id)
         .select_related('category')
-        .only('name', 'category_id', 'category__name')[:25]
+        .only('name', 'category_id', 'category__name')[: settings.BOT_PAGE_SIZE]
     )
     media = [media_obj async for media_obj in media]
     if not media:

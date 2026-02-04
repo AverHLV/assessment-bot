@@ -11,5 +11,5 @@ class MediaQuerySet(models.QuerySet):
                 **kwargs,
             )
             .exclude(assessments__user_id=user_id)
-            .order_by('assessment_until_dt')
+            .order_by('assessment_until_dt', 'name')
         )
