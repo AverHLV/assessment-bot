@@ -11,6 +11,11 @@ class AssessmentDictionaryAdmin(DictionaryAdmin):
     pass
 
 
+@admin.action(description='Finish assessment for the selected media')
+def finish_assessment(_modeladmin, _request, queryset):
+    queryset.update(assessment_status=queryset.model.AssessmentStatus.COMPLETED)
+
+
 @admin.register(models.Media)
 class MediaAdmin(admin.ModelAdmin):
     list_display = 'id', 'name', 'create_dt', 'update_dt', 'assessment_status', 'assessment_until_dt', 'category'
@@ -20,6 +25,7 @@ class MediaAdmin(admin.ModelAdmin):
     search_fields = 'code', 'name'
     readonly_fields = 'id', 'create_dt', 'update_dt'
     ordering = '-update_dt', '-create_dt'
+    actions = (finish_assessment,)
 
 
 @admin.register(models.Assessment)
