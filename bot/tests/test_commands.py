@@ -1,42 +1,37 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase
 from django.utils import timezone
 
+import factory
 from asgiref.sync import sync_to_async
 
 from datetime import timedelta
-from unittest.mock import AsyncMock
 
 from api.assessment.models import Media
 from api.assessment.tests.factories import AssessmentFactory, MediaFactory
-from api.user.tests.factories import UserFactory
 from bot import commands
+from bot.tests.base import CommandBaseTestCase
 
 User = get_user_model()
 
 
-class RateTestCase(TestCase):
-    def setUp(self):
-        self.interaction = AsyncMock()
-
+class RateTestCase(CommandBaseTestCase):
     async def test__rate(self):
-        user = await sync_to_async(UserFactory.create)()
+        user = await self.get_auth_user()
         media = await sync_to_async(MediaFactory.create_batch)(
             size=3,
             assessment_status=Media.AssessmentStatus.IN_PROGRESS,
             assessment_until_dt=timezone.now() + timedelta(days=1),
         )
         await sync_to_async(AssessmentFactory.create)(media=media[-1], user=user)
-
         selected_media = media[:-1]
-        self.interaction.user.id = user.external_id
 
         await commands.rate.callback(self.interaction)
 
-        self.interaction.response.send_message.assert_called_once()
-        args, kwargs = self.interaction.response.send_message.call_args
-        self.assertEqual(args[0], 'Choose a story from the ashes...')
-        self.assertTrue(kwargs['ephemeral'])
+        self.assert_thinking_placeholder(self.interaction)
+        self.interaction.edit_original_response.assert_called_once()
+        _, kwargs = self.interaction.edit_original_response.call_args
+        expected_message = 'Choose a story from the ashes...'
+        self.assertEqual(kwargs['content'], expected_message)
 
         view_elements = kwargs['view']._children
         self.assertEqual(len(view_elements), 1)
@@ -60,5 +55,51 @@ class RateTestCase(TestCase):
         self.assertIsNotNone(user)
         self.assertEqual(user.username, self.interaction.user.name)
 
+        self.assert_thinking_placeholder(self.interaction)
         expected_message = 'The ashes are silent... There is nothing left for you to judge.'
-        self.interaction.response.send_message.assert_called_once_with(expected_message, ephemeral=True)
+        self.interaction.edit_original_response.assert_called_once_with(content=expected_message)
+
+
+class MyRatesTestCase(CommandBaseTestCase):
+    async def test__my_rates(self):
+        current_time = timezone.now()
+        user = await self.get_auth_user()
+        media = await sync_to_async(MediaFactory.create_batch)(size=2)
+        assessments = await sync_to_async(AssessmentFactory.create_batch)(
+            size=len(media),
+            create_dt=factory.Iterator((current_time, current_time - timedelta(hours=1))),
+            partial=factory.Iterator(('', 'partial')),
+            media=factory.Iterator(media),
+            user=user,
+        )
+
+        await commands.my_rates.callback(self.interaction)
+
+        self.assert_thinking_placeholder(self.interaction)
+        self.interaction.edit_original_response.assert_called_once()
+        _, kwargs = self.interaction.edit_original_response.call_args
+        expected_message = 'These are your past verdicts. Heavy, warm, and a little embarrassing, but precious.'
+        self.assertEqual(kwargs['content'], expected_message)
+        self.assertIsNotNone(kwargs['view'])
+
+        embed = kwargs['embed']
+        self.assertTrue(embed._footer)
+        embed_fields = embed._fields
+        self.assertEqual(len(embed_fields), len(assessments))
+        for n, field in enumerate(embed_fields):
+            assessment = assessments[n]
+            self.assertFalse(field['inline'])
+            self.assertIn(assessment.media.name, field['name'])
+            self.assertIn(str(assessment.mark), field['name'])
+            self.assertIn(assessment.media.category.name, field['value'])
+            self.assertIn(assessment.media.url, field['value'])
+        self.assertIn(assessments[1].partial, embed_fields[1]['value'])
+
+    async def test__my_rates__no_assessments(self):
+        await self.get_auth_user()
+
+        await commands.my_rates.callback(self.interaction)
+
+        self.assert_thinking_placeholder(self.interaction)
+        expected_message = 'Only cold ash remains. You have judged nothing... or perhaps I have already forgotten.'
+        self.interaction.edit_original_response.assert_called_once_with(content=expected_message)

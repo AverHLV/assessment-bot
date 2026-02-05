@@ -2,6 +2,7 @@ import factory.fuzzy
 
 from api.assessment import models
 from api.user.tests.factories import UserFactory
+from core.utils_tests import pause_date_auto_fields
 
 
 class MediaFactory(factory.django.DjangoModelFactory):
@@ -19,3 +20,8 @@ class AssessmentFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.Assessment
+
+    @classmethod
+    @pause_date_auto_fields(fields=['create_dt'])
+    def _create(cls, *args, **kwargs):
+        return super()._create(*args, **kwargs)

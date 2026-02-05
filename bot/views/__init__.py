@@ -1,1 +1,2 @@
-from bot.views.assessment import MediaSelectToAssessView
+from bot.views.assessment_list import MyAssessmentPaginator
+from bot.views.assessment_rate import MediaSelectToAssessView

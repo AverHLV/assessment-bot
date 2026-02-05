@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from api.assessment.models import Assessment, Media
 from api.assessment.tests.factories import MediaFactory
 from api.user.tests.factories import UserFactory
-from bot.views.assessment import AssessmentModal, MediaSelect
+from bot.views.assessment_rate import AssessmentModal, MediaSelect
 
 User = get_user_model()
 
@@ -48,8 +48,8 @@ class AssessmentModalTestCase(TestCase):
         self.assertIsNotNone(assessment)
         self.assert_assessment_instance(assessment, user, media, self.mark)
 
-        expected_msg = 'So... you have seen it through to the end. Your judgment is carved into the ash.'
-        self.interaction.response.send_message.assert_called_once_with(expected_msg, ephemeral=True)
+        expected_message = 'So... you have seen it through to the end. Your judgment is carved into the ash.'
+        self.interaction.response.send_message.assert_called_once_with(expected_message, ephemeral=True)
 
     async def test__assessment_modal__on_submit__partial(self):
         user = await sync_to_async(UserFactory.create)()
