@@ -1,19 +1,21 @@
-from django.test import SimpleTestCase
+from django.test import TestCase
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
+from api.assessment.models import Assessment
 from bot.views.assessment_list import MyAssessmentPaginator
 
 
-class MyAssessmentPaginatorTestCase(SimpleTestCase):
+class MyAssessmentPaginatorTestCase(TestCase):
     paginator_class = MyAssessmentPaginator
 
     def setUp(self):
         self.interaction = AsyncMock()
 
     def get_paginator(self):
-        paginator = self.paginator_class(items=[])
-        paginator.get_embed = Mock()
+        assessment_queryset = Assessment.objects.none()
+        paginator = self.paginator_class(items_queryset=assessment_queryset, item_count=0)
+        paginator.get_embed = AsyncMock()
         return paginator
 
     async def test__my_assessment_paginator__previous(self):

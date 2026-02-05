@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.db.models import QuerySet
 
 import discord
 
@@ -9,7 +10,7 @@ from abc import ABCMeta, abstractmethod
 class BasePaginator(discord.ui.View, metaclass=ABCMeta):
     embed_item_value_max_length: int = 1024
 
-    def __init__(self, items: list, per_page: int = 10, **kwargs):
+    def __init__(self, items_queryset: QuerySet, item_count: int, per_page: int = 10, **kwargs):
         if per_page > settings.BOT_PAGE_SIZE:
             raise ValueError(f'The given page size exceeds the Discord limit: {per_page}')
 
@@ -17,15 +18,16 @@ class BasePaginator(discord.ui.View, metaclass=ABCMeta):
 
         self.page = 0
         self.per_page = per_page
-        self.total_pages = math.ceil(len(items) / per_page)
-        self.items = items
+        self.total_pages = math.ceil(item_count / per_page)
+        self.items_queryset = items_queryset
 
-    def get_embed(self) -> discord.Embed:
+    async def get_embed(self) -> discord.Embed:
         start = self.page * self.per_page
         end = start + self.per_page
+        queryset = self.items_queryset.all()[start:end]
 
         embed = discord.Embed(title='Items')
-        embed = self.add_items(embed, page_items=self.items[start:end])
+        embed = await self.add_items(embed, queryset)
         embed.set_footer(text=f'Page {self.page + 1}/{self.total_pages}')
         return embed
 
@@ -41,7 +43,8 @@ class BasePaginator(discord.ui.View, metaclass=ABCMeta):
             return
 
         self.page -= 1
-        await interaction.response.edit_message(embed=self.get_embed(), view=self)
+        embed = await self.get_embed()
+        await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label='Next ->', style=discord.ButtonStyle.secondary)
     async def next(self, interaction: discord.Interaction, _button: discord.Button) -> None:
@@ -50,8 +53,9 @@ class BasePaginator(discord.ui.View, metaclass=ABCMeta):
             return
 
         self.page += 1
-        await interaction.response.edit_message(embed=self.get_embed(), view=self)
+        embed = await self.get_embed()
+        await interaction.response.edit_message(embed=embed, view=self)
 
     @abstractmethod
-    def add_items(self, embed: discord.Embed, page_items: list) -> discord.Embed:
+    async def add_items(self, embed: discord.Embed, queryset: QuerySet) -> discord.Embed:
         pass

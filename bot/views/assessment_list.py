@@ -1,3 +1,5 @@
+from django.db.models import QuerySet
+
 import discord
 
 from api.assessment.models import Assessment
@@ -5,8 +7,8 @@ from bot.views.base import BasePaginator
 
 
 class MyAssessmentPaginator(BasePaginator):
-    def add_items(self, embed: discord.Embed, page_items: list[Assessment]) -> discord.Embed:
-        for assessment in page_items:
+    async def add_items(self, embed: discord.Embed, queryset: QuerySet[Assessment]) -> discord.Embed:
+        async for assessment in queryset:
             name = f'{assessment.media.name} - *{assessment.mark}*'
             value = f'{assessment.media.category.name}\n'
             if assessment.partial:

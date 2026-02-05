@@ -40,6 +40,13 @@ async def rate(interaction: discord.Interaction) -> None:
 async def my_rates(interaction: discord.Interaction) -> None:
     await show_thinking_placeholder(interaction)
     user = await User.objects.aget_or_create_by_discord(interaction.user)
+    assessment_queryset = user.assessments.all()
+    assessment_count = await assessment_queryset.acount()
+    if not assessment_count:
+        msg = 'Only cold ash remains. You have judged nothing... or perhaps I have already forgotten.'
+        await interaction.edit_original_response(content=msg)
+        return
+
     only_fields = (
         'mark',
         'partial',
@@ -47,17 +54,14 @@ async def my_rates(interaction: discord.Interaction) -> None:
         'media__name',
         'media__url',
         'media__description',
+        'media__category_id',
         'media__category__name',
     )
-    assessments = (
-        user.assessments.select_related('media', 'media__category').only(*only_fields).order_by('-create_dt')[:500]
+    assessment_queryset = (
+        assessment_queryset.select_related('media', 'media__category').only(*only_fields).order_by('-create_dt')
     )
-    assessments = [assessment async for assessment in assessments]
-    if not assessments:
-        msg = 'Only cold ash remains. You have judged nothing... or perhaps I have already forgotten.'
-        await interaction.edit_original_response(content=msg)
-        return
 
     msg = 'These are your past verdicts. Heavy, warm, and a little embarrassing, but precious.'
-    view = views.MyAssessmentPaginator(items=assessments)
-    await interaction.edit_original_response(content=msg, embed=view.get_embed(), view=view)
+    view = views.MyAssessmentPaginator(items_queryset=assessment_queryset, item_count=assessment_count)
+    embed = await view.get_embed()
+    await interaction.edit_original_response(content=msg, embed=embed, view=view)
