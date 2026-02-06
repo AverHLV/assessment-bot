@@ -17,10 +17,11 @@ async def on_message(message: discord.Message) -> None:
     async with message.channel.typing():
         user = await User.objects.aget_or_create_by_discord(message.author)
         only_fields = 'mark', 'partial', 'media_id', 'media__name', 'media__category_id', 'media__category__name'
-        assessments = user.assessments.select_related('media', 'media__category').only(*only_fields)
+        assessments = (
+            user.assessments.select_related('media', 'media__category').only(*only_fields).order_by('-create_dt')[:10]
+        )
 
         context = {
-            'user': user,
             'assessments': [assessment async for assessment in assessments],
             'message': message.content,
         }

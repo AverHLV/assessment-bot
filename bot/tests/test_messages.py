@@ -63,7 +63,6 @@ class MessagesTestCase(CommandBaseTestCase):
         message = kwargs['messages'][0]
         self.assertEqual(message['role'], AsyncOpenRouterClient.OpenRouterRole.USER)
         prompt = message['content']
-        self.assertIn(user.username, prompt)
         self.assertIn(str(assessment.mark), prompt)
         self.assertIn(assessment.media.name, prompt)
         self.assertIn(assessment.media.category.name, prompt)
