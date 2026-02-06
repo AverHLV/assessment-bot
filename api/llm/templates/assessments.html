@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block parameters %}
+    4. Partner's nickname.
+    Partner's nickname in this imaginary world, you may use it.
+    {{ user.username }}
+    5. Partner's assessments.
+    Partner's previous assessments, use them in your answer, criticize or praise according to your character.
+    In format: mark (from 1 to 10 in half steps), partial or full (indicates that the media has been partially reviewed
+    if value is not 'full'), media name, media category.
+    {% for assessment in assessments %}
+        {{ assessment.mark }}, {{ assessment.partial|default:'full' }}, {{ assessment.media.name }},
+        {{ assessment.media.category.name }}
+    {% empty %}
+        Your partner has no assessments yet.
+    {% endfor %}
+{% endblock %}
+
+{% block rules %}
+    5. Take into account your partner's assessments.
+{% endblock %}

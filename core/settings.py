@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # own
     'api.assessment',
+    'api.llm',
     'api.user',
     'bot',
 ]
@@ -129,6 +130,13 @@ AUTH_PASSWORD_VALIDATORS = [
 
 BOT_TOKEN = env('APP_BOT_TOKEN', default='token')
 BOT_PAGE_SIZE = 25
+
+
+# Integrations
+
+OPENROUTER_URL = env('APP_OPENROUTER_URL', default='https://openrouter')
+OPENROUTER_API_KEY = env('APP_OPENROUTER_API_KEY', default='key')
+OPENROUTER_MODEL = env('APP_OPENROUTER_MODEL', default='model')
 
 
 # Logging

@@ -47,5 +47,5 @@ class AssessmentAdmin(admin.ModelAdmin):
     display_user.short_description = 'User'
 
     def get_queryset(self, request):
-        only_fields = 'mark', 'partial', 'create_dt', 'media__name', 'user__username'
+        only_fields = 'mark', 'partial', 'create_dt', 'media_id', 'user_id', 'media__name', 'user__username'
         return super().get_queryset(request).only(*only_fields)

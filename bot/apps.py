@@ -6,4 +6,4 @@ class BotConfig(AppConfig):
     name = 'bot'
 
     def ready(self) -> None:
-        from bot import commands  # noqa: F401
+        from bot import commands, messages  # noqa: F401
