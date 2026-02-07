@@ -146,12 +146,12 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'json': {
-            '()': 'core.formatters.JSONFormatter',
+            '()': 'core.logging.formatters.JSONFormatter',
         },
     },
     'filters': {
         'health-check-ignore': {
-            '()': 'core.filters.HealthCheckIgnoreFilter',
+            '()': 'core.logging.filters.HealthCheckIgnoreFilter',
         },
     },
     'handlers': {
