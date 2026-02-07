@@ -34,7 +34,8 @@ class AssessmentModal(discord.ui.Modal):
     llm_client = openrouter_client
 
     def __init__(self, *args, user: User, media: Media, **kwargs):
-        kwargs.setdefault('title', f'{media.name}: inscribe your judgment')
+        default_title = media.name if len(media.name) <= 45 else f'{media.name[:42]}...'
+        kwargs.setdefault('title', default_title)
         super().__init__(*args, **kwargs)
 
         self.user = user
