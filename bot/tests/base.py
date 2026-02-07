@@ -5,9 +5,44 @@ from asgiref.sync import sync_to_async
 
 from unittest.mock import AsyncMock
 
+from api.llm.clients import AsyncOpenRouterClient
 from api.user.tests.factories import UserFactory
 
 User = get_user_model()
+
+
+class AsyncTestContextManager:
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, traceback) -> None:
+        return
+
+
+class LLMClientTestMixin:
+    def setUp(self):
+        super().setUp()
+
+        self.response_content = 'response content'
+        self.response_data = {
+            'choices': [
+                {
+                    'message': {
+                        'content': self.response_content,
+                    },
+                },
+            ],
+        }
+
+    def assert_llm_completion_call(self, mock: AsyncMock) -> str:
+        mock.assert_called_once()
+        _, kwargs = mock.call_args
+        self.assertIn('messages', kwargs)
+        message = kwargs['messages'][0]
+        self.assertEqual(message['role'], AsyncOpenRouterClient.OpenRouterRole.USER)
+        prompt = message['content']
+        self.assertTrue(prompt)
+        return prompt
 
 
 class CommandBaseTestCase(TestCase):

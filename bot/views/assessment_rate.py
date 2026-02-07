@@ -1,9 +1,11 @@
 from django import forms
 from django.contrib.auth import get_user_model
+from django.template.loader import render_to_string
 
 import discord
 
 from api.assessment.models import Assessment, Media
+from api.llm import openrouter_client
 from bot.forms import AssessmentForm
 
 ASSESSMENT_MARK_FIELD = Assessment._meta.get_field('mark')
@@ -12,7 +14,7 @@ ASSESSMENT_PARTIAL_FIELD = Assessment._meta.get_field('partial')
 User = get_user_model()
 
 
-class AssessmentModal(discord.ui.Modal, title='Inscribe Your Judgment'):
+class AssessmentModal(discord.ui.Modal):
     mark = discord.ui.TextInput(
         label='Mark',
         placeholder=ASSESSMENT_MARK_FIELD.help_text,
@@ -29,35 +31,37 @@ class AssessmentModal(discord.ui.Modal, title='Inscribe Your Judgment'):
     )
 
     form_class = AssessmentForm
+    llm_client = openrouter_client
 
-    def __init__(self, *args, user: User, media_id: int, **kwargs):
+    def __init__(self, *args, user: User, media: Media, **kwargs):
+        kwargs.setdefault('title', f'{media.name}: inscribe your judgment')
         super().__init__(*args, **kwargs)
+
         self.user = user
-        self.media_id = media_id
+        self.media = media
 
     def validate(self) -> forms.ModelForm:
         form = self.form_class(data={'mark': self.mark.value, 'partial': self.partial.value})
         form.is_valid()
         return form
 
-    async def create_assessment(self, form: forms.ModelForm) -> None:
-        await Assessment.objects.acreate(
+    async def create_assessment(self, form: forms.ModelForm) -> Assessment:
+        return await Assessment.objects.acreate(
             mark=form.cleaned_data['mark'],
             partial=form.cleaned_data['partial'],
-            media_id=self.media_id,
+            media=self.media,
             user_id=self.user.id,
         )
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
         form = self.validate()
         if form.is_valid():
-            await self.create_assessment(form)
-            # TODO: Provide response messages by LLM
-            if form.cleaned_data['partial']:
-                msg = 'Hehe... even broken stories leave scars. I have written yours down.'
-            else:
-                msg = 'So... you have seen it through to the end. Your judgment is carved into the ash.'
+            context = {'assessment': await self.create_assessment(form)}
+            prompt = render_to_string(template_name='assessment.html', context=context)
 
+            messages = [{'role': self.llm_client.OpenRouterRole.USER, 'content': prompt}]
+            response = await self.llm_client.create_completion(messages=messages)
+            msg = response['choices'][0]['message']['content']
         else:
             msg = 'Alas... your words are flawed:\n'
             for field, errors in form.errors.items():
@@ -85,7 +89,12 @@ class MediaSelect(discord.ui.Select):
         self.user = user
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        modal = self.modal_class(user=self.user, media_id=int(self.values[0]))
+        media = (
+            await Media.objects.select_related('category')
+            .only('name', 'description', 'category_id', 'category__name')
+            .aget(id=int(self.values[0]))
+        )
+        modal = self.modal_class(user=self.user, media=media)
         await interaction.response.send_modal(modal)
 
 

@@ -5,23 +5,14 @@ from asgiref.sync import async_to_sync, sync_to_async
 from unittest.mock import AsyncMock, Mock, patch
 
 from api.assessment.tests.factories import AssessmentFactory
-from api.llm.clients import AsyncOpenRouterClient
 from bot import messages
 from bot.bot import bot
-from bot.tests.base import CommandBaseTestCase
+from bot.tests.base import AsyncTestContextManager, CommandBaseTestCase, LLMClientTestMixin
 
 User = get_user_model()
 
 
-class AsyncTestContextManager:
-    async def __aenter__(self):
-        return self
-
-    async def __aexit__(self, exc_type, exc, traceback) -> None:
-        return
-
-
-class MessagesTestCase(CommandBaseTestCase):
+class MessagesTestCase(LLMClientTestMixin, CommandBaseTestCase):
     def setUp(self):
         super().setUp()
 
@@ -29,17 +20,6 @@ class MessagesTestCase(CommandBaseTestCase):
         self.message.author.bot = False
         self.message.mentions = [bot.user]
         self.message.content = 'message content'
-
-        self.response_content = 'response content'
-        self.response_data = {
-            'choices': [
-                {
-                    'message': {
-                        'content': self.response_content,
-                    },
-                },
-            ],
-        }
 
     async def get_auth_user(self) -> User:
         user = await super().get_auth_user()
@@ -58,11 +38,7 @@ class MessagesTestCase(CommandBaseTestCase):
 
         await messages.on_message(self.message)
 
-        completion_mock.assert_called_once()
-        _, kwargs = completion_mock.call_args
-        message = kwargs['messages'][0]
-        self.assertEqual(message['role'], AsyncOpenRouterClient.OpenRouterRole.USER)
-        prompt = message['content']
+        prompt = self.assert_llm_completion_call(completion_mock)
         self.assertIn(str(assessment.mark), prompt)
         self.assertIn(assessment.media.name, prompt)
         self.assertIn(assessment.media.category.name, prompt)
