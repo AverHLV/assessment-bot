@@ -34,7 +34,7 @@ class LLMClientTestMixin:
             ],
         }
 
-    def assert_llm_completion_call(self, mock: AsyncMock) -> str:
+    def assert_llm_completion_mock(self, mock: AsyncMock) -> str:
         mock.assert_called_once()
         _, kwargs = mock.call_args
         self.assertIn('messages', kwargs)

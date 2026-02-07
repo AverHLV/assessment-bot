@@ -54,7 +54,7 @@ class AssessmentModalTestCase(LLMClientTestMixin, TestCase):
         self.assertIsNotNone(assessment)
         self.assert_assessment_instance(assessment, user, media, self.mark)
 
-        prompt = self.assert_llm_completion_call(completion_mock)
+        prompt = self.assert_llm_completion_mock(completion_mock)
         self.assertIn(str(assessment.mark), prompt)
         self.assertIn(media.name, prompt)
         self.assertIn(media.description, prompt)
@@ -79,7 +79,7 @@ class AssessmentModalTestCase(LLMClientTestMixin, TestCase):
         self.assertIsNotNone(assessment)
         self.assert_assessment_instance(assessment, user, media, self.mark, partial=self.partial)
 
-        prompt = self.assert_llm_completion_call(completion_mock)
+        prompt = self.assert_llm_completion_mock(completion_mock)
         self.assertIn(assessment.partial, prompt)
 
         self.interaction.response.send_message.assert_called_once()

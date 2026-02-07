@@ -38,7 +38,7 @@ class MessagesTestCase(LLMClientTestMixin, CommandBaseTestCase):
 
         await messages.on_message(self.message)
 
-        prompt = self.assert_llm_completion_call(completion_mock)
+        prompt = self.assert_llm_completion_mock(completion_mock)
         self.assertIn(str(assessment.mark), prompt)
         self.assertIn(assessment.media.name, prompt)
         self.assertIn(assessment.media.category.name, prompt)
