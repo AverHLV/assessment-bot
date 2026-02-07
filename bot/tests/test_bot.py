@@ -15,9 +15,6 @@ class AssessmentBotTestCase(SimpleTestCase):
         self.bot = self.bot_class(command_prefix='!')
         self.interaction = AsyncMock()
         self.error = discord.app_commands.AppCommandError('error')
-        self.on_error_msg = (
-            'The ritual failed. My master will have twisted the threads of fate. Try again... if he allows it.'
-        )
 
     @patch('bot.bot.AssessmentBot.tree', new_callable=AsyncMock)
     @async_to_sync
@@ -25,16 +22,21 @@ class AssessmentBotTestCase(SimpleTestCase):
         await self.bot.setup_hook()
         tree_mock.sync.assert_called_once()
 
+    async def test__assessment_bot__on_error(self):
+        event_method = self.bot.EventMethod.ON_MESSAGE
+        await self.bot.on_error(event_method, self.interaction)
+        self.interaction.reply.assert_called_once_with(self.bot.error_message)
+
     async def test__assessment_bot__on_command_error__response_is_done(self):
         self.interaction.response.is_done = Mock(return_value=True)
         await on_command_error(self.interaction, self.error)
 
         self.interaction.response.is_done.assert_called_once()
-        self.interaction.followup.send.assert_called_once_with(self.on_error_msg, ephemeral=True)
+        self.interaction.followup.send.assert_called_once_with(self.bot.error_message, ephemeral=True)
 
     async def test__assessment_bot__on_command_error__response_is_not_done(self):
         self.interaction.response.is_done = Mock(return_value=False)
         await on_command_error(self.interaction, self.error)
 
         self.interaction.response.is_done.assert_called_once()
-        self.interaction.response.send_message.assert_called_once_with(self.on_error_msg, ephemeral=True)
+        self.interaction.response.send_message.assert_called_once_with(self.bot.error_message, ephemeral=True)
