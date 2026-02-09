@@ -30,9 +30,5 @@ class Command(BaseCommand):
 
     @staticmethod
     async def coroutine() -> None:
-        if settings.FEATURE_BOT_IDLE:
-            while True:
-                await asyncio.sleep(10)
-        else:
-            async with bot:
-                await bot.start(settings.BOT_TOKEN)
+        async with bot:
+            await bot.start(settings.BOT_TOKEN)

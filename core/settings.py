@@ -75,10 +75,8 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 FEATURE_SENTRY = env.bool('APP_FEATURE_SENTRY', default=True)
 
-FEATURE_BOT_IDLE = env.bool('APP_FEATURE_BOT_IDLE', default=False)
 
-
-# Proxy related settings
+# Proxy-related settings
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
