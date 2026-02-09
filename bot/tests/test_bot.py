@@ -3,7 +3,7 @@ from django.test import SimpleTestCase
 import discord
 from asgiref.sync import async_to_sync
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from bot.bot import AssessmentBot, on_command_error
 
@@ -27,16 +27,10 @@ class AssessmentBotTestCase(SimpleTestCase):
         await self.bot.on_error(event_method, self.interaction)
         self.interaction.reply.assert_called_once_with(self.bot.error_message)
 
-    async def test__assessment_bot__on_command_error__response_is_done(self):
-        self.interaction.response.is_done = Mock(return_value=True)
+    async def test__assessment_bot__on_command_error(self):
         await on_command_error(self.interaction, self.error)
-
-        self.interaction.response.is_done.assert_called_once()
-        self.interaction.followup.send.assert_called_once_with(self.bot.error_message, ephemeral=True)
-
-    async def test__assessment_bot__on_command_error__response_is_not_done(self):
-        self.interaction.response.is_done = Mock(return_value=False)
-        await on_command_error(self.interaction, self.error)
-
-        self.interaction.response.is_done.assert_called_once()
-        self.interaction.response.send_message.assert_called_once_with(self.bot.error_message, ephemeral=True)
+        self.interaction.edit_original_response.assert_called_once_with(
+            content=self.bot.error_message,
+            embed=None,
+            view=None,
+        )

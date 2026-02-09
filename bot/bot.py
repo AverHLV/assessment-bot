@@ -38,8 +38,4 @@ bot = AssessmentBot(command_prefix='!')
 @bot.tree.error
 async def on_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError) -> None:
     logger.exception(error)
-
-    if interaction.response.is_done():
-        await interaction.followup.send(AssessmentBot.error_message, ephemeral=True)
-    else:
-        await interaction.response.send_message(AssessmentBot.error_message, ephemeral=True)
+    await interaction.edit_original_response(content=AssessmentBot.error_message, embed=None, view=None)

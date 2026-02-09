@@ -69,7 +69,7 @@ class AssessmentModal(discord.ui.Modal):
                 msg = f'{msg}- {field}: {errors[0]}\n'
             msg = f'{msg}Let the judgment become once more.'
 
-        await interaction.response.send_message(msg, ephemeral=True)
+        await interaction.response.edit_message(content=msg, embed=None, view=None)
 
 
 class MediaSelect(discord.ui.Select):

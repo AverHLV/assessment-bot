@@ -60,7 +60,11 @@ class AssessmentModalTestCase(LLMClientTestMixin, TestCase):
         self.assertIn(media.description, prompt)
         self.assertIn(media.category.name, prompt)
 
-        self.interaction.response.send_message.assert_called_once_with(self.response_content, ephemeral=True)
+        self.interaction.response.edit_message.assert_called_once_with(
+            content=self.response_content,
+            embed=None,
+            view=None,
+        )
 
     @patch('bot.views.assessment_rate.openrouter_client.create_completion')
     @async_to_sync
@@ -82,7 +86,7 @@ class AssessmentModalTestCase(LLMClientTestMixin, TestCase):
         prompt = self.assert_llm_completion_mock(completion_mock)
         self.assertIn(assessment.partial, prompt)
 
-        self.interaction.response.send_message.assert_called_once()
+        self.interaction.response.edit_message.assert_called_once()
 
     @patch('bot.views.assessment_rate.openrouter_client.create_completion')
     @async_to_sync
@@ -100,9 +104,9 @@ class AssessmentModalTestCase(LLMClientTestMixin, TestCase):
         self.assertFalse(assessment_exists)
 
         completion_mock.assert_not_called()
-        self.interaction.response.send_message.assert_called_once()
-        args, _ = self.interaction.response.send_message.call_args
-        msg = args[0]
+        self.interaction.response.edit_message.assert_called_once()
+        _, kwargs = self.interaction.response.edit_message.call_args
+        msg = kwargs['content']
         self.assertIn('mark', msg)
         self.assertIn('Value must be an integer or end with .5.', msg)
 
