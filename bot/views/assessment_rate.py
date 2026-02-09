@@ -47,12 +47,10 @@ class AssessmentModal(discord.ui.Modal):
         return form
 
     async def create_assessment(self, form: forms.ModelForm) -> Assessment:
-        return await Assessment.objects.acreate(
-            mark=form.cleaned_data['mark'],
-            partial=form.cleaned_data['partial'],
-            media=self.media,
-            user_id=self.user.id,
-        )
+        form.instance.media = self.media
+        form.instance.user_id = self.user.id
+        await form.instance.asave()
+        return form.instance
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
         form = self.validate()
