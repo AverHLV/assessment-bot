@@ -11,9 +11,8 @@ User = get_user_model()
 
 
 async def show_thinking_placeholder(interaction: discord.Interaction) -> None:
-    await interaction.response.defer(ephemeral=True)
     msg = 'My gears turn, ah - still hot from the past...'
-    await interaction.followup.send(msg, ephemeral=True)
+    await interaction.response.send_message(msg, ephemeral=True)
 
 
 @bot.tree.command(description='Another judgment calls...')

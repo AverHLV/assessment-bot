@@ -56,6 +56,5 @@ class CommandBaseTestCase(TestCase):
 
     @staticmethod
     def assert_thinking_placeholder(interaction: AsyncMock) -> None:
-        interaction.response.defer.assert_called_once_with(ephemeral=True)
         expected_message = 'My gears turn, ah - still hot from the past...'
-        interaction.followup.send.assert_called_once_with(expected_message, ephemeral=True)
+        interaction.response.send_message.assert_called_once_with(expected_message, ephemeral=True)
