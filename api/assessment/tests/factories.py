@@ -12,6 +12,11 @@ class MediaFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Media
 
+    @classmethod
+    @pause_date_auto_fields(fields=['create_dt'])
+    def _create(cls, *args, **kwargs):
+        return super()._create(*args, **kwargs)
+
 
 class AssessmentFactory(factory.django.DjangoModelFactory):
     mark = factory.fuzzy.FuzzyDecimal(low=1, high=10, precision=0)

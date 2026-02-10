@@ -1,9 +1,10 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db import models
 
 import discord
 
-from api.assessment.models import Media
+from api.assessment.models import Assessment, Media
 from bot import views
 from bot.bot import bot
 
@@ -33,6 +34,36 @@ async def rate(interaction: discord.Interaction) -> None:
     msg = 'Choose a story from the ashes...'
     view = views.MediaSelectToAssessView(user=user, media=media)
     await interaction.edit_original_response(content=msg, view=view)
+
+
+@bot.tree.command(description='Witness how this world was judged by many hands.')
+async def rates(interaction: discord.Interaction) -> None:
+    await show_thinking_placeholder(interaction)
+    media_queryset = Media.objects.completed()
+    media_count = await media_queryset.acount()
+    if not media_count:
+        msg = 'I searched everywhere. Not a single story survived.'
+        await interaction.edit_original_response(content=msg)
+        return
+
+    assessments_only_fields = 'mark', 'partial', 'user_id', 'user__username'
+    assessments = (
+        Assessment.objects.select_related('user')
+        .only(*assessments_only_fields)
+        .order_by('-create_dt', 'user__username')
+    )
+
+    media_queryset = (
+        media_queryset.select_related('category')
+        .prefetch_related(models.Prefetch(lookup='assessments', queryset=assessments))
+        .only('name', 'category_id', 'category__name')
+        .order_by('-create_dt')
+    )
+
+    msg = 'Stories, scorched by opinions. I kept them for you.'
+    view = views.AssessmentPaginator(items_queryset=media_queryset, item_count=media_count)
+    embed = await view.get_embed()
+    await interaction.edit_original_response(content=msg, embed=embed, view=view)
 
 
 @bot.tree.command(description='The echoes of your past judgments rise again.')

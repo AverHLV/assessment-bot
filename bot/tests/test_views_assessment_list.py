@@ -1,26 +1,39 @@
-from django.test import TestCase
-
 import factory
 from asgiref.sync import sync_to_async
 
-from unittest.mock import AsyncMock
+from api.assessment.models import Assessment, Media
+from api.assessment.tests.factories import AssessmentFactory, MediaFactory
+from bot.tests.base import PaginatorBaseTestCase
+from bot.views.assessment_list import AssessmentPaginator, MyAssessmentPaginator
 
-from api.assessment.models import Assessment
-from api.assessment.tests.factories import AssessmentFactory
-from bot.views.assessment_list import MyAssessmentPaginator
+
+class AssessmentPaginatorTestCase(PaginatorBaseTestCase):
+    paginator_class = AssessmentPaginator
+
+    async def test__assessment_paginator__modal__on_submit(self):
+        media, _ = await sync_to_async(MediaFactory.create_batch)(
+            size=2,
+            name=factory.Iterator(('some-media', 'other-media')),
+        )
+
+        paginator = self.get_paginator()
+        paginator.items_queryset = Media.objects.all()
+
+        modal = paginator.modal_class(paginator=paginator)
+        modal.media_name._value = media.name[:5].upper()
+        await modal.on_submit(self.interaction)
+
+        item_count = await paginator.items_queryset.acount()
+        self.assertEqual(item_count, 1)
+        first_media = await paginator.items_queryset.afirst()
+        self.assertIsNotNone(first_media)
+        self.assertEqual(first_media.id, media.id)
+
+        self.interaction.response.edit_message.assert_called_once()
 
 
-class MyAssessmentPaginatorTestCase(TestCase):
+class MyAssessmentPaginatorTestCase(PaginatorBaseTestCase):
     paginator_class = MyAssessmentPaginator
-
-    def setUp(self):
-        self.interaction = AsyncMock()
-
-    def get_paginator(self):
-        assessment_queryset = Assessment.objects.none()
-        paginator = self.paginator_class(items_queryset=assessment_queryset, item_count=0)
-        paginator.get_embed = AsyncMock()
-        return paginator
 
     async def test__my_assessment_paginator__previous(self):
         paginator = self.get_paginator()

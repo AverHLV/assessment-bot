@@ -1,10 +1,12 @@
 from django.contrib.auth import get_user_model
+from django.db.models import QuerySet
 from django.test import TestCase
 
 from asgiref.sync import sync_to_async
 
 from unittest.mock import AsyncMock
 
+from api.assessment.models import Assessment
 from api.llm.clients import AsyncOpenRouterClient
 from api.user.tests.factories import UserFactory
 
@@ -58,3 +60,16 @@ class CommandBaseTestCase(TestCase):
     def assert_thinking_placeholder(interaction: AsyncMock) -> None:
         expected_message = 'My gears turn, ah - still hot from the past...'
         interaction.response.send_message.assert_called_once_with(expected_message, ephemeral=True)
+
+
+class PaginatorBaseTestCase(TestCase):
+    paginator_class: type
+    queryset: QuerySet = Assessment.objects.none()
+
+    def setUp(self):
+        self.interaction = AsyncMock()
+
+    def get_paginator(self):
+        paginator = self.paginator_class(items_queryset=self.queryset.all(), item_count=0)
+        paginator.get_embed = AsyncMock()
+        return paginator

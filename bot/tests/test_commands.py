@@ -60,6 +60,45 @@ class RateTestCase(CommandBaseTestCase):
         self.interaction.edit_original_response.assert_called_once_with(content=expected_message)
 
 
+class RatesTestCase(CommandBaseTestCase):
+    async def test__rates(self):
+        current_time = timezone.now()
+        assessments = await sync_to_async(AssessmentFactory.create_batch)(
+            size=2,
+            partial=factory.Iterator(('', 'partial')),
+            media__create_dt=factory.Iterator((current_time, current_time - timedelta(hours=1))),
+            media__assessment_status=Media.AssessmentStatus.COMPLETED,
+        )
+
+        await commands.rates.callback(self.interaction)
+
+        self.assert_thinking_placeholder(self.interaction)
+        self.interaction.edit_original_response.assert_called_once()
+        _, kwargs = self.interaction.edit_original_response.call_args
+        expected_message = 'Stories, scorched by opinions. I kept them for you.'
+        self.assertEqual(kwargs['content'], expected_message)
+        self.assertIsNotNone(kwargs['view'])
+
+        embed = kwargs['embed']
+        embed_fields = embed._fields
+        self.assertEqual(len(embed_fields), len(assessments))
+        for n, field in enumerate(embed_fields):
+            assessment = assessments[n]
+            self.assertFalse(field['inline'])
+            self.assertIn(assessment.media.name, field['name'])
+            self.assertIn(assessment.media.category.name, field['name'])
+            self.assertIn(assessment.user.username, field['value'])
+            self.assertIn(str(assessment.mark), field['value'])
+        self.assertIn(assessments[1].partial, embed_fields[1]['value'])
+
+    async def test__rates__no_media(self):
+        await commands.rates.callback(self.interaction)
+
+        self.assert_thinking_placeholder(self.interaction)
+        expected_message = 'I searched everywhere. Not a single story survived.'
+        self.interaction.edit_original_response.assert_called_once_with(content=expected_message)
+
+
 class MyRatesTestCase(CommandBaseTestCase):
     async def test__my_rates(self):
         current_time = timezone.now()

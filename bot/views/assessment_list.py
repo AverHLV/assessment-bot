@@ -8,13 +8,37 @@ from bot.views.base import BaseFilterModal, BaseFilterPaginator
 MEDIA_NAME_FIELD = Media._meta.get_field('name')
 
 
-class MyAssessmentFilterModal(BaseFilterModal):
+class AssessmentFilterModal(BaseFilterModal):
     media_name = discord.ui.TextInput(
         label='Media name',
         placeholder='Type a part of a media name.',
         max_length=MEDIA_NAME_FIELD.max_length,
     )
 
+    async def filter_items_queryset(self, items_queryset: QuerySet) -> QuerySet:
+        return items_queryset.filter(name__icontains=self.media_name.value)
+
+
+class AssessmentPaginator(BaseFilterPaginator):
+    modal_class = AssessmentFilterModal
+
+    async def add_items(self, embed: discord.Embed, queryset: QuerySet[Media]) -> discord.Embed:
+        async for media in queryset:
+            name = f'{media.name}, {media.category.name}'
+            value = ''
+            for assessment in media.assessments.all():
+                value = f'{value}{assessment.user.username} - *{assessment.mark}*'
+                if assessment.partial:
+                    value = f'{value}, ({assessment.partial})'
+                value = f'{value}\n'
+            value = self.strip_embed_item_value(value)
+
+            embed.add_field(name=name, value=value, inline=False)
+
+        return embed
+
+
+class MyAssessmentFilterModal(AssessmentFilterModal):
     async def filter_items_queryset(self, items_queryset: QuerySet) -> QuerySet:
         return items_queryset.filter(media__name__icontains=self.media_name.value)
 

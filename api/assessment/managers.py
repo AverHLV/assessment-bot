@@ -3,6 +3,9 @@ from django.utils import timezone
 
 
 class MediaQuerySet(models.QuerySet):
+    def completed(self, **kwargs):
+        return self.filter(assessment_status=self.model.AssessmentStatus.COMPLETED, **kwargs)
+
     def for_assessment(self, user_id: int, **kwargs):
         return (
             self.filter(
