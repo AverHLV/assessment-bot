@@ -47,11 +47,7 @@ async def rates(interaction: discord.Interaction) -> None:
         return
 
     assessments_only_fields = 'mark', 'partial', 'user_id', 'user__username'
-    assessments = (
-        Assessment.objects.select_related('user')
-        .only(*assessments_only_fields)
-        .order_by('-create_dt', 'user__username')
-    )
+    assessments = Assessment.objects.select_related('user').only(*assessments_only_fields).order_by('user__username')
 
     media_queryset = (
         media_queryset.select_related('category')
