@@ -27,7 +27,7 @@ async def on_message(message: discord.Message) -> None:
         }
         prompt = render_to_string(template_name='message.html', context=context)
 
-        messages = [{'role': openrouter_client.OpenRouterRole.USER, 'content': prompt}]
+        messages = [{'role': openrouter_client.Role.USER, 'content': prompt}]
         response = await openrouter_client.create_completion(messages=messages)
         response = response['choices'][0]['message']['content']
 

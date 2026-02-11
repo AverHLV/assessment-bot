@@ -5,7 +5,7 @@ from core.clients import AsyncHTTPTokenAuthBaseClient, HTTPClientResponseData
 
 
 class AsyncOpenRouterClient(AsyncHTTPTokenAuthBaseClient):
-    class OpenRouterRole(TextChoices):
+    class Role(TextChoices):
         ASSISTANT = 'assistant'
         USER = 'user'
 

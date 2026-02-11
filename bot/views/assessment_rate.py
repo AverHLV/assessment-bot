@@ -58,7 +58,7 @@ class AssessmentModal(discord.ui.Modal):
             context = {'assessment': await self.create_assessment(form)}
             prompt = render_to_string(template_name='assessment.html', context=context)
 
-            messages = [{'role': self.llm_client.OpenRouterRole.USER, 'content': prompt}]
+            messages = [{'role': self.llm_client.Role.USER, 'content': prompt}]
             response = await self.llm_client.create_completion(messages=messages)
             msg = response['choices'][0]['message']['content']
         else:

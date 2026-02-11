@@ -41,7 +41,7 @@ class LLMClientTestMixin:
         _, kwargs = mock.call_args
         self.assertIn('messages', kwargs)
         message = kwargs['messages'][0]
-        self.assertEqual(message['role'], AsyncOpenRouterClient.OpenRouterRole.USER)
+        self.assertEqual(message['role'], AsyncOpenRouterClient.Role.USER)
         prompt = message['content']
         self.assertTrue(prompt)
         return prompt
