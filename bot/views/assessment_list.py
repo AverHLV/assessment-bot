@@ -3,24 +3,12 @@ from django.db.models import QuerySet
 import discord
 
 from api.assessment.models import Assessment, Media
-from bot.views.base import BaseFilterModal, BaseFilterPaginator
-
-MEDIA_NAME_FIELD = Media._meta.get_field('name')
-
-
-class AssessmentFilterModal(BaseFilterModal):
-    media_name = discord.ui.TextInput(
-        label='Media name',
-        placeholder='Type a part of a media name.',
-        max_length=MEDIA_NAME_FIELD.max_length,
-    )
-
-    async def filter_items_queryset(self, items_queryset: QuerySet) -> QuerySet:
-        return items_queryset.filter(name__icontains=self.media_name.value)
+from bot.views.base import BaseFilterPaginator
+from bot.views.media_list import MediaFilterModal
 
 
 class AssessmentPaginator(BaseFilterPaginator):
-    modal_class = AssessmentFilterModal
+    modal_class = MediaFilterModal
 
     async def add_items(self, embed: discord.Embed, queryset: QuerySet[Media]) -> discord.Embed:
         async for media in queryset:
@@ -38,8 +26,8 @@ class AssessmentPaginator(BaseFilterPaginator):
         return embed
 
 
-class MyAssessmentFilterModal(AssessmentFilterModal):
-    async def filter_items_queryset(self, items_queryset: QuerySet) -> QuerySet:
+class MyAssessmentFilterModal(MediaFilterModal):
+    async def filter_items_queryset(self, items_queryset: QuerySet[Assessment]) -> QuerySet[Assessment]:
         return items_queryset.filter(media__name__icontains=self.media_name.value)
 
 

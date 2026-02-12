@@ -7,33 +7,9 @@ import discord
 from api.assessment.models import Assessment, Media
 from bot import views
 from bot.bot import bot
+from bot.commands.base import show_thinking_placeholder
 
 User = get_user_model()
-
-
-async def show_thinking_placeholder(interaction: discord.Interaction) -> None:
-    msg = 'My gears turn, ah - still hot from the past...'
-    await interaction.response.send_message(msg, ephemeral=True)
-
-
-@bot.tree.command(description='Another judgment calls...')
-async def rate(interaction: discord.Interaction) -> None:
-    await show_thinking_placeholder(interaction)
-    user = await User.objects.aget_or_create_by_discord(interaction.user)
-    media = (
-        Media.objects.for_assessment(user_id=user.id)
-        .select_related('category')
-        .only('name', 'category_id', 'category__name')[: settings.BOT_PAGE_SIZE]
-    )
-    media = [media_obj async for media_obj in media]
-    if not media:
-        msg = 'The ashes are silent... There is nothing left for you to judge.'
-        await interaction.edit_original_response(content=msg)
-        return
-
-    msg = 'Choose a story from the ashes...'
-    view = views.MediaSelectToAssessView(user=user, media=media)
-    await interaction.edit_original_response(content=msg, view=view)
 
 
 @bot.tree.command(description='Witness how this world was judged by many hands.')
@@ -91,3 +67,23 @@ async def my_rates(interaction: discord.Interaction) -> None:
     view = views.MyAssessmentPaginator(items_queryset=assessment_queryset, item_count=assessment_count)
     embed = await view.get_embed()
     await interaction.edit_original_response(content=msg, embed=embed, view=view)
+
+
+@bot.tree.command(description='Another judgment calls...')
+async def rate(interaction: discord.Interaction) -> None:
+    await show_thinking_placeholder(interaction)
+    user = await User.objects.aget_or_create_by_discord(interaction.user)
+    media = (
+        Media.objects.for_assessment(user_id=user.id)
+        .select_related('category')
+        .only('name', 'category_id', 'category__name')[: settings.BOT_PAGE_SIZE]
+    )
+    media = [media_obj async for media_obj in media]
+    if not media:
+        msg = 'The ashes are silent... There is nothing left for you to judge.'
+        await interaction.edit_original_response(content=msg)
+        return
+
+    msg = 'Choose a story from the ashes...'
+    view = views.MediaSelectToAssessView(user=user, media=media)
+    await interaction.edit_original_response(content=msg, view=view)
