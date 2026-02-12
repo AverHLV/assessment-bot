@@ -36,8 +36,8 @@ class Media(TimeStamped):
         COMPLETED = 'completed'
 
     name = models.CharField(max_length=300, db_index=True)
-    url = models.URLField()
-    description = models.TextField(blank=True)
+    url = models.URLField(help_text='URL that describes the media, such as an IMDb page.')
+    description = models.TextField(blank=True, help_text='Description for quick media memorization.')
     assessment_status = models.CharField(choices=AssessmentStatus, default=AssessmentStatus.INITIAL)
     assessment_until_dt = models.DateTimeField(blank=True, null=True)
     category = models.ForeignKey(MediaCategory, on_delete=models.PROTECT, related_name='media')

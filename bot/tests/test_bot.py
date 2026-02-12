@@ -34,3 +34,11 @@ class AssessmentBotTestCase(SimpleTestCase):
             embed=None,
             view=None,
         )
+
+    async def test__assessment_bot__on_command_error__cooldown(self):
+        self.error = discord.app_commands.CommandOnCooldown(cooldown=AsyncMock(), retry_after=5)
+
+        await on_command_error(self.interaction, self.error)
+
+        expected_message = self.bot.error_cooldown_message.format(retry=self.error.retry_after)
+        self.interaction.response.send_message.assert_called_once_with(expected_message, ephemeral=True)

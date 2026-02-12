@@ -13,6 +13,7 @@ class AssessmentBot(commands.Bot):
         ON_MESSAGE = 'on_message'
 
     error_message = 'The ritual failed. My master will have twisted the threads of fate. Try again... if he allows it.'
+    error_cooldown_message = 'Ah, slow down. Even an automaton needs a breath. Try again in {retry:.0f} seconds.'
 
     def __init__(self, *args, **kwargs):
         intents = discord.Intents.default()
@@ -37,5 +38,10 @@ bot = AssessmentBot(command_prefix='!')
 
 @bot.tree.error
 async def on_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError) -> None:
-    logger.exception(error)
-    await interaction.edit_original_response(content=AssessmentBot.error_message, embed=None, view=None)
+    match type(error):
+        case discord.app_commands.CommandOnCooldown:
+            msg = AssessmentBot.error_cooldown_message.format(retry=error.retry_after)
+            await interaction.response.send_message(msg, ephemeral=True)
+        case _:
+            logger.exception(error)
+            await interaction.edit_original_response(content=AssessmentBot.error_message, embed=None, view=None)
