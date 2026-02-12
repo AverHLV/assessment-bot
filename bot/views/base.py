@@ -1,7 +1,9 @@
+from django import forms
 from django.conf import settings
 from django.db.models import QuerySet
 
 import discord
+from asgiref.sync import sync_to_async
 
 import math
 from abc import ABCMeta, abstractmethod
@@ -113,3 +115,34 @@ class BaseFilterPaginator(BasePaginator, metaclass=ABCMeta):
     async def clear(self, interaction: discord.Interaction, _button: discord.Button) -> None:
         await self.clear_items_queryset()
         await self.refresh(interaction)
+
+
+class BaseCreateModal(discord.ui.Modal, metaclass=ABCMeta):
+    form_class: type[forms.ModelForm]
+
+    def get_form(self) -> forms.ModelForm:
+        data = {field: getattr(self, field).value for field in self.__modal_children_items__}
+        return self.form_class(data=data)
+
+    async def save(self, form: forms.ModelForm):
+        await form.instance.asave()
+        return form.instance
+
+    async def form_invalid(self, form: forms.ModelForm) -> str:
+        msg = 'Alas... your words are flawed:\n'
+        for field, errors in form.errors.items():
+            msg = f'{msg}- {field}: {errors[0]}\n'
+        return f'{msg}Let the ritual become once more.'
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        form = self.get_form()
+        if await sync_to_async(form.is_valid)():
+            msg = await self.form_valid(form)
+        else:
+            msg = await self.form_invalid(form)
+
+        await interaction.response.edit_message(content=msg, embed=None, view=None)
+
+    @abstractmethod
+    async def form_valid(self, form: forms.ModelForm) -> str:
+        pass

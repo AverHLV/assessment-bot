@@ -7,6 +7,7 @@ import discord
 from api.assessment.models import Assessment, Media
 from api.llm import openrouter_client
 from bot.forms import AssessmentForm
+from bot.views.base import BaseCreateModal
 
 ASSESSMENT_MARK_FIELD = Assessment._meta.get_field('mark')
 ASSESSMENT_PARTIAL_FIELD = Assessment._meta.get_field('partial')
@@ -14,14 +15,13 @@ ASSESSMENT_PARTIAL_FIELD = Assessment._meta.get_field('partial')
 User = get_user_model()
 
 
-class AssessmentModal(discord.ui.Modal):
+class AssessmentModal(BaseCreateModal):
     mark = discord.ui.TextInput(
         label='Mark',
         placeholder=ASSESSMENT_MARK_FIELD.help_text,
         min_length=1,
         max_length=3,
     )
-
     partial = discord.ui.TextInput(
         required=False,
         label='If partial',
@@ -41,33 +41,18 @@ class AssessmentModal(discord.ui.Modal):
         self.user = user
         self.media = media
 
-    def validate(self) -> forms.ModelForm:
-        form = self.form_class(data={'mark': self.mark.value, 'partial': self.partial.value})
-        form.is_valid()
-        return form
-
-    async def create_assessment(self, form: forms.ModelForm) -> Assessment:
-        form.instance.media = self.media
+    async def save(self, form: forms.ModelForm) -> Assessment:
         form.instance.user_id = self.user.id
-        await form.instance.asave()
-        return form.instance
+        form.instance.media = self.media
+        return await super().save(form)
 
-    async def on_submit(self, interaction: discord.Interaction) -> None:
-        form = self.validate()
-        if form.is_valid():
-            context = {'assessment': await self.create_assessment(form)}
-            prompt = render_to_string(template_name='assessment.html', context=context)
+    async def form_valid(self, form: forms.ModelForm) -> str:
+        context = {'assessment': await self.save(form)}
+        prompt = render_to_string(template_name='assessment.html', context=context)
 
-            messages = [{'role': self.llm_client.Role.USER, 'content': prompt}]
-            response = await self.llm_client.create_completion(messages=messages)
-            msg = response['choices'][0]['message']['content']
-        else:
-            msg = 'Alas... your words are flawed:\n'
-            for field, errors in form.errors.items():
-                msg = f'{msg}- {field}: {errors[0]}\n'
-            msg = f'{msg}Let the judgment become once more.'
-
-        await interaction.response.edit_message(content=msg, embed=None, view=None)
+        messages = [{'role': self.llm_client.Role.USER, 'content': prompt}]
+        response = await self.llm_client.create_completion(messages=messages)
+        return response['choices'][0]['message']['content']
 
 
 class MediaSelect(discord.ui.Select):
