@@ -3,20 +3,8 @@ from django.db.models import QuerySet
 import discord
 
 from api.assessment.models import Media
-from bot.views.base import BaseFilterModal, BaseFilterPaginator
-
-MEDIA_NAME_FIELD = Media._meta.get_field('name')
-
-
-class MediaFilterModal(BaseFilterModal):
-    media_name = discord.ui.TextInput(
-        label='Media name',
-        placeholder='Type a part of a media name.',
-        max_length=MEDIA_NAME_FIELD.max_length,
-    )
-
-    async def filter_items_queryset(self, items_queryset: QuerySet[Media]) -> QuerySet[Media]:
-        return items_queryset.filter(name__icontains=self.media_name.value)
+from bot.modals import MediaFilterModal
+from bot.views.base import BaseFilterPaginator
 
 
 class FutureMediaPaginator(BaseFilterPaginator):

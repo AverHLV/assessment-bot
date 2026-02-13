@@ -1,10 +1,11 @@
 from django import forms
+from django.db.models import QuerySet
 
 import discord
 
 from api.assessment.models import Media, MediaCategory
 from bot.forms import MediaForm
-from bot.modals.base import BaseCreateModal
+from bot.modals.base import BaseCreateModal, BaseFilterModal
 
 MEDIA_NAME_FIELD = Media._meta.get_field('name')
 MEDIA_URL_FIELD = Media._meta.get_field('url')
@@ -42,3 +43,14 @@ class MediaModal(BaseCreateModal):
         form = super().get_form()
         form.data['category'] = self.media_category.id
         return form
+
+
+class MediaFilterModal(BaseFilterModal):
+    media_name = discord.ui.TextInput(
+        label='Media name',
+        placeholder='Type a part of a media name.',
+        max_length=MEDIA_NAME_FIELD.max_length,
+    )
+
+    async def filter_items_queryset(self, items_queryset: QuerySet[Media]) -> QuerySet[Media]:
+        return items_queryset.filter(name__icontains=self.media_name.value)

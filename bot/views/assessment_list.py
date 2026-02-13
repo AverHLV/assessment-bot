@@ -3,6 +3,7 @@ from django.db.models import QuerySet
 import discord
 
 from api.assessment.models import Assessment, Media
+from bot.modals import MyAssessmentFilterModal
 from bot.views.base import BaseFilterPaginator
 from bot.views.media_list import MediaFilterModal
 
@@ -24,11 +25,6 @@ class AssessmentPaginator(BaseFilterPaginator):
             embed.add_field(name=name, value=value, inline=False)
 
         return embed
-
-
-class MyAssessmentFilterModal(MediaFilterModal):
-    async def filter_items_queryset(self, items_queryset: QuerySet[Assessment]) -> QuerySet[Assessment]:
-        return items_queryset.filter(media__name__icontains=self.media_name.value)
 
 
 class MyAssessmentPaginator(BaseFilterPaginator):

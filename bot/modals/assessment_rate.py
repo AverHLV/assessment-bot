@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth import get_user_model
+from django.db.models import QuerySet
 from django.template.loader import render_to_string
 
 import discord
@@ -8,6 +9,7 @@ from api.assessment.models import Assessment, Media
 from api.llm import openrouter_client
 from bot.forms import AssessmentForm
 from bot.modals.base import BaseCreateModal
+from bot.modals.media import MediaFilterModal
 
 ASSESSMENT_MARK_FIELD = Assessment._meta.get_field('mark')
 ASSESSMENT_PARTIAL_FIELD = Assessment._meta.get_field('partial')
@@ -53,3 +55,8 @@ class AssessmentModal(BaseCreateModal):
         messages = [{'role': self.llm_client.Role.USER, 'content': prompt}]
         response = await self.llm_client.create_completion(messages=messages)
         return response['choices'][0]['message']['content']
+
+
+class MyAssessmentFilterModal(MediaFilterModal):
+    async def filter_items_queryset(self, items_queryset: QuerySet[Assessment]) -> QuerySet[Assessment]:
+        return items_queryset.filter(media__name__icontains=self.media_name.value)
