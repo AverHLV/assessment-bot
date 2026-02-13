@@ -8,6 +8,7 @@ from core.utils_tests import pause_date_auto_fields
 class MediaFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: f'name{n}')
     category = factory.Iterator(models.MediaCategory.objects.all())
+    creator = factory.SubFactory(UserFactory)
 
     class Meta:
         model = models.Media

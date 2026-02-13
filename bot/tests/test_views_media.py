@@ -2,7 +2,7 @@ from django.test import TestCase
 
 from asgiref.sync import async_to_sync
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from api.assessment.models import MediaCategory
 from bot.views.media import MediaCategorySelect
@@ -12,8 +12,9 @@ class MediaCategorySelectTestCase(TestCase):
     select_class = MediaCategorySelect
 
     def setUp(self):
+        self.user = Mock()
         self.interaction = AsyncMock()
-        self.select = self.select_class(media_categories=[])
+        self.select = self.select_class(user=self.user, media_categories=[])
 
     @patch('discord.ui.select.selected_values')
     @async_to_sync
@@ -26,6 +27,7 @@ class MediaCategorySelectTestCase(TestCase):
         self.interaction.response.send_modal.assert_called_once()
         args, _ = self.interaction.response.send_modal.call_args
         modal = args[0]
-        self.assertEqual(modal.media_category, category)
+        self.assertEqual(modal.user, self.user)
+        self.assertEqual(modal.media_category.id, category.id)
         self.assertIn(category.name.lower(), modal.title)
         values_mock.get.assert_called_once()

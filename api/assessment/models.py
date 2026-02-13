@@ -40,7 +40,9 @@ class Media(TimeStamped):
     description = models.TextField(blank=True, help_text='Description for quick media memorization.')
     assessment_status = models.CharField(choices=AssessmentStatus, default=AssessmentStatus.INITIAL)
     assessment_until_dt = models.DateTimeField(blank=True, null=True)
+
     category = models.ForeignKey(MediaCategory, on_delete=models.PROTECT, related_name='media')
+    creator = models.ForeignKey(User, on_delete=models.PROTECT, related_name='media')
 
     objects = managers.MediaQuerySet.as_manager()
 

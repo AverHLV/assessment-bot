@@ -13,7 +13,7 @@ class FutureMediaPaginator(BaseFilterPaginator):
     async def add_items(self, embed: discord.Embed, queryset: QuerySet[Media]) -> discord.Embed:
         async for media in queryset:
             name = f'{media.name}, {media.category.name}'
-            value = f'[Link]({media.url})\n{media.description}'
+            value = f'Added by *{media.creator.username}*\n[Link]({media.url})\n{media.description}'
             value = self.strip_embed_item_value(value)
 
             embed.add_field(name=name, value=value, inline=False)

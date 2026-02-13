@@ -1,16 +1,11 @@
-from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 from django.test import TestCase
-
-from asgiref.sync import sync_to_async
 
 from unittest.mock import AsyncMock
 
 from api.assessment.models import Assessment
 from api.llm.clients import AsyncOpenRouterClient
 from api.user.tests.factories import UserFactory
-
-User = get_user_model()
 
 
 class AsyncTestContextManager:
@@ -48,13 +43,13 @@ class LLMClientTestMixin:
 
 
 class CommandBaseTestCase(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
+
     def setUp(self):
         self.interaction = AsyncMock()
-
-    async def get_auth_user(self) -> User:
-        user = await sync_to_async(UserFactory.create)()
-        self.interaction.user.id = user.external_id
-        return user
+        self.interaction.user.id = self.user.external_id
 
     @staticmethod
     def assert_thinking_placeholder(interaction: AsyncMock) -> None:

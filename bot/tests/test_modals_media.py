@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from asgiref.sync import sync_to_async
@@ -6,7 +7,10 @@ from unittest.mock import AsyncMock
 
 from api.assessment.models import Media, MediaCategory
 from api.assessment.tests.factories import MediaFactory
+from api.user.tests.factories import UserFactory
 from bot.views.media import MediaModal
+
+User = get_user_model()
 
 
 class MediaModalTestCase(TestCase):
@@ -15,6 +19,7 @@ class MediaModalTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.category = MediaCategory.objects.first()
+        cls.user = UserFactory()
 
     def setUp(self):
         super().setUp()
@@ -27,6 +32,7 @@ class MediaModalTestCase(TestCase):
     def assert_media_instance(
         self,
         media: Media,
+        creator: User,
         name: str,
         url: str,
         category: MediaCategory,
@@ -36,9 +42,10 @@ class MediaModalTestCase(TestCase):
         self.assertEqual(media.url, url)
         self.assertEqual(media.description, description)
         self.assertEqual(media.category_id, category.id)
+        self.assertEqual(media.creator_id, creator.id)
 
     async def test__media_modal__on_submit(self):
-        modal = self.modal_class(media_category=self.category)
+        modal = self.modal_class(user=self.user, media_category=self.category)
         modal.name._value = self.name
         modal.url._value = self.url
 
@@ -46,7 +53,7 @@ class MediaModalTestCase(TestCase):
 
         media = await Media.objects.afirst()
         self.assertIsNotNone(media)
-        self.assert_media_instance(media, self.name, self.url, self.category)
+        self.assert_media_instance(media, self.user, self.name, self.url, self.category)
 
         self.interaction.response.edit_message.assert_called_once_with(
             content=modal.form_valid_message,
@@ -55,7 +62,7 @@ class MediaModalTestCase(TestCase):
         )
 
     async def test__media_modal__on_submit__description(self):
-        modal = self.modal_class(media_category=self.category)
+        modal = self.modal_class(user=self.user, media_category=self.category)
         modal.name._value = self.name
         modal.url._value = self.url
         modal.description._value = self.description
@@ -64,7 +71,7 @@ class MediaModalTestCase(TestCase):
 
         media = await Media.objects.afirst()
         self.assertIsNotNone(media)
-        self.assert_media_instance(media, self.name, self.url, self.category, description=self.description)
+        self.assert_media_instance(media, self.user, self.name, self.url, self.category, description=self.description)
 
         self.interaction.response.edit_message.assert_called_once_with(
             content=modal.form_valid_message,
@@ -75,7 +82,7 @@ class MediaModalTestCase(TestCase):
     async def test__media_modal__on_submit__errors__validation_error(self):
         await sync_to_async(MediaFactory.create)(name=self.name, category=self.category)
 
-        modal = self.modal_class(media_category=self.category)
+        modal = self.modal_class(user=self.user, media_category=self.category)
         modal.name._value = self.name
         modal.url._value = self.url
 

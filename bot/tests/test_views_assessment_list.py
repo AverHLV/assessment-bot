@@ -35,6 +35,13 @@ class AssessmentPaginatorTestCase(PaginatorBaseTestCase):
 class MyAssessmentPaginatorTestCase(PaginatorBaseTestCase):
     paginator_class = MyAssessmentPaginator
 
+    @classmethod
+    def setUpTestData(cls):
+        cls.assessment, _ = AssessmentFactory.create_batch(
+            size=2,
+            media__name=factory.Iterator(('some-media', 'other-media')),
+        )
+
     async def test__my_assessment_paginator__previous(self):
         paginator = self.get_paginator()
         paginator.page = 1
@@ -89,13 +96,11 @@ class MyAssessmentPaginatorTestCase(PaginatorBaseTestCase):
         self.assertIs(modal.paginator, paginator)
 
     async def test__my_assessment_paginator__clear(self):
-        assessment, _ = await sync_to_async(AssessmentFactory.create_batch)(size=2)
-
         paginator = self.get_paginator()
         paginator.page = 1
         paginator.total_pages = 5
         paginator.items_queryset_base = Assessment.objects.all()
-        paginator.items_queryset = paginator.items_queryset_base.filter(id=assessment.id)
+        paginator.items_queryset = paginator.items_queryset_base.filter(id=self.assessment.id)
 
         await paginator.clear.callback(self.interaction)
 
@@ -110,18 +115,13 @@ class MyAssessmentPaginatorTestCase(PaginatorBaseTestCase):
         )
 
     async def test__my_assessment_paginator__modal__on_submit(self):
-        assessment, _ = await sync_to_async(AssessmentFactory.create_batch)(
-            size=2,
-            media__name=factory.Iterator(('some-media', 'other-media')),
-        )
-
         paginator = self.get_paginator()
         paginator.page = 1
         paginator.total_pages = 5
         paginator.items_queryset = Assessment.objects.all()
 
         modal = paginator.modal_class(paginator=paginator)
-        modal.media_name._value = assessment.media.name[:5].upper()
+        modal.media_name._value = self.assessment.media.name[:5].upper()
         await modal.on_submit(self.interaction)
 
         self.assertFalse(paginator.page)
@@ -130,7 +130,7 @@ class MyAssessmentPaginatorTestCase(PaginatorBaseTestCase):
         self.assertEqual(item_count, 1)
         first_assessment = await paginator.items_queryset.afirst()
         self.assertIsNotNone(first_assessment)
-        self.assertEqual(first_assessment.id, assessment.id)
+        self.assertEqual(first_assessment.id, self.assessment.id)
 
         self.interaction.response.edit_message.assert_called_once_with(
             embed=paginator.get_embed.return_value,

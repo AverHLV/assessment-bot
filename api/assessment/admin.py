@@ -29,14 +29,44 @@ def finish_assessment(_modeladmin, _request, queryset):
 
 @admin.register(models.Media)
 class MediaAdmin(admin.ModelAdmin):
-    list_display = 'id', 'name', 'create_dt', 'update_dt', 'assessment_status', 'assessment_until_dt', 'category'
+    list_display = (
+        'id',
+        'name',
+        'create_dt',
+        'update_dt',
+        'assessment_status',
+        'assessment_until_dt',
+        'category',
+        'display_creator',
+    )
     list_display_links = list_display
-    list_select_related = ('category',)
-    list_filter = 'assessment_status', 'category'
-    search_fields = 'code', 'name'
+    list_select_related = 'category', 'creator'
+    list_filter = 'assessment_status', 'category', 'creator'
+    search_fields = ('name',)
     readonly_fields = 'id', 'create_dt', 'update_dt'
     ordering = '-update_dt', '-create_dt'
     actions = start_assessment_for_1_week, finish_assessment
+
+    def display_creator(self, obj: models.Media) -> str:
+        return obj.creator.username
+
+    display_creator.short_description = 'Creator'
+
+    def get_queryset(self, request):
+        only_fields = (
+            'create_dt',
+            'update_dt',
+            'name',
+            'url',
+            'description',
+            'assessment_status',
+            'assessment_until_dt',
+            'category_id',
+            'category__name',
+            'creator_id',
+            'creator__username',
+        )
+        return super().get_queryset(request).only(*only_fields)
 
 
 @admin.register(models.Assessment)
@@ -44,7 +74,8 @@ class AssessmentAdmin(admin.ModelAdmin):
     list_display = 'id', 'mark', 'partial', 'create_dt', 'display_media', 'display_user'
     list_display_links = list_display
     list_select_related = 'media', 'user'
-    search_fields = 'media__name', 'user__username'
+    list_filter = ('user',)
+    search_fields = ('media__name',)
     readonly_fields = 'id', 'create_dt'
     ordering = ('-create_dt',)
 

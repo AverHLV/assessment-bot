@@ -56,14 +56,13 @@ class RatesTestCase(CommandBaseTestCase):
 class MyRatesTestCase(CommandBaseTestCase):
     async def test__my_rates(self):
         current_time = timezone.now()
-        user = await self.get_auth_user()
         media = await sync_to_async(MediaFactory.create_batch)(size=2)
         assessments = await sync_to_async(AssessmentFactory.create_batch)(
             size=len(media),
             create_dt=factory.Iterator((current_time, current_time - timedelta(hours=1))),
             partial=factory.Iterator(('', 'partial')),
             media=factory.Iterator(media),
-            user=user,
+            user=self.user,
         )
 
         await commands.my_rates.callback(self.interaction)
@@ -89,8 +88,6 @@ class MyRatesTestCase(CommandBaseTestCase):
         self.assertIn(assessments[1].partial, embed_fields[1]['value'])
 
     async def test__my_rates__no_assessments(self):
-        await self.get_auth_user()
-
         await commands.my_rates.callback(self.interaction)
 
         self.assert_thinking_placeholder(self.interaction)
@@ -100,13 +97,12 @@ class MyRatesTestCase(CommandBaseTestCase):
 
 class RateTestCase(CommandBaseTestCase):
     async def test__rate(self):
-        user = await self.get_auth_user()
         media = await sync_to_async(MediaFactory.create_batch)(
             size=3,
             assessment_status=Media.AssessmentStatus.IN_PROGRESS,
             assessment_until_dt=timezone.now() + timedelta(days=1),
         )
-        await sync_to_async(AssessmentFactory.create)(media=media[-1], user=user)
+        await sync_to_async(AssessmentFactory.create)(media=media[-1], user=self.user)
         selected_media = media[:-1]
 
         await commands.rate.callback(self.interaction)
@@ -120,7 +116,7 @@ class RateTestCase(CommandBaseTestCase):
         view_elements = kwargs['view']._children
         self.assertEqual(len(view_elements), 1)
         media_select = view_elements[0]
-        self.assertEqual(media_select.user.id, user.id)
+        self.assertEqual(media_select.user.id, self.user.id)
         options = media_select._underlying.options
         self.assertEqual(len(options), len(selected_media))
         for n, option in enumerate(options):

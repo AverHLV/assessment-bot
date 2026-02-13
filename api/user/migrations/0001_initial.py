@@ -8,7 +8,7 @@ from django.db import migrations, models
 import api.user.managers
 
 
-def forwards_func(apps, schema_editor):
+def forwards_func(apps, _schema_editor):
     User = apps.get_model('user', 'User')
     User.objects.create(
         external_id=0,

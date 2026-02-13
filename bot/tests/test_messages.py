@@ -1,5 +1,3 @@
-from django.contrib.auth import get_user_model
-
 from asgiref.sync import async_to_sync, sync_to_async
 
 from unittest.mock import AsyncMock, Mock, patch
@@ -9,22 +7,16 @@ from bot import messages
 from bot.bot import bot
 from bot.tests.base import AsyncTestContextManager, CommandBaseTestCase, LLMClientTestMixin
 
-User = get_user_model()
-
 
 class MessagesTestCase(LLMClientTestMixin, CommandBaseTestCase):
     def setUp(self):
         super().setUp()
 
         self.message = self.interaction
+        self.message.author.id = self.user.external_id
         self.message.author.bot = False
         self.message.mentions = [bot.user]
         self.message.content = 'message content'
-
-    async def get_auth_user(self) -> User:
-        user = await super().get_auth_user()
-        self.message.author.id = user.external_id
-        return user
 
     @patch('bot.messages.openrouter_client.create_completion')
     @async_to_sync
@@ -33,8 +25,7 @@ class MessagesTestCase(LLMClientTestMixin, CommandBaseTestCase):
         self.message.channel.typing = Mock(return_value=typing_manager_mock)
         completion_mock.return_value = self.response_data
 
-        user = await self.get_auth_user()
-        assessment, _ = await sync_to_async(AssessmentFactory.create_batch)(size=2, user=user)
+        assessment, _ = await sync_to_async(AssessmentFactory.create_batch)(size=2, user=self.user)
 
         await messages.on_message(self.message)
 
