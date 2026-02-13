@@ -1,4 +1,7 @@
 from django.contrib import admin
+from django.utils import timezone
+
+from datetime import timedelta
 
 from api.assessment import models
 from core.admin import DictionaryAdmin
@@ -9,6 +12,14 @@ dictionary_models = (models.MediaCategory,)
 @admin.register(*dictionary_models)
 class AssessmentDictionaryAdmin(DictionaryAdmin):
     pass
+
+
+@admin.action(description='Start assessment for the selected media (1 week)')
+def start_assessment_for_1_week(_modeladmin, _request, queryset):
+    queryset.update(
+        assessment_status=queryset.model.AssessmentStatus.IN_PROGRESS,
+        assessment_until_dt=timezone.now() + timedelta(days=8),
+    )
 
 
 @admin.action(description='Finish assessment for the selected media')
@@ -25,7 +36,7 @@ class MediaAdmin(admin.ModelAdmin):
     search_fields = 'code', 'name'
     readonly_fields = 'id', 'create_dt', 'update_dt'
     ordering = '-update_dt', '-create_dt'
-    actions = (finish_assessment,)
+    actions = start_assessment_for_1_week, finish_assessment
 
 
 @admin.register(models.Assessment)
