@@ -7,10 +7,10 @@ name = "pypi"
 python_version = "3.13"
 
 [packages]
-django = "==5.2.10"
-django-environ = "==0.12.0"
+django = "==5.2.11"
+django-environ = "==0.12.1"
 discord.py = "==2.6.4"
-sentry-sdk = "==2.51.0"
+sentry-sdk = "==2.52.0"
 psycopg = {extras = ["binary"], version = "==3.3.2"}
 httpx = "==0.28.1"
 gunicorn = "*"
@@ -20,7 +20,7 @@ uvloop = "*"
 [dev-packages]
 factory-boy = "==3.3.3"
 coverage = "*"
-ruff = "==0.14.14"
+ruff = "==0.15.1"
 
 [scripts]
 start = "gunicorn -c /app/.box/etc/gunicorn.py core.wsgi:application"
