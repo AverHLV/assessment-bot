@@ -6,6 +6,8 @@ from asgiref.sync import sync_to_async
 
 from abc import ABCMeta, abstractmethod
 
+from bot.utils import show_thinking_placeholder
+
 
 class BaseFilterModal(discord.ui.Modal, title='Search', metaclass=ABCMeta):
     def __init__(self, paginator, **kwargs):
@@ -13,7 +15,8 @@ class BaseFilterModal(discord.ui.Modal, title='Search', metaclass=ABCMeta):
         self.paginator = paginator
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
-        items_queryset = await self.filter_items_queryset(self.paginator.items_queryset)
+        await show_thinking_placeholder(interaction, edit=True)
+        items_queryset = await self.filter_items_queryset(self.paginator.items_queryset_base)
         await self.paginator.set_items_queryset(items_queryset)
         await self.paginator.refresh(interaction)
 
@@ -45,10 +48,12 @@ class BaseCreateModal(discord.ui.Modal):
         return f'{msg}Let the ritual become once more.'
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
+        await show_thinking_placeholder(interaction, edit=True)
+
         form = self.get_form()
         if await sync_to_async(form.is_valid)():
             msg = await self.form_valid(form)
         else:
             msg = await self.form_invalid(form)
 
-        await interaction.response.edit_message(content=msg, embed=None, view=None)
+        await interaction.edit_original_response(content=msg, embed=None, view=None)

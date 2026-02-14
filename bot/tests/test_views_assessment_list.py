@@ -17,12 +17,13 @@ class AssessmentPaginatorTestCase(PaginatorBaseTestCase):
         )
 
         paginator = self.get_paginator()
-        paginator.items_queryset = Media.objects.all()
+        paginator.items_queryset_base = Media.objects.all()
 
         modal = paginator.modal_class(paginator=paginator)
         modal.media_name._value = media.name[:5].upper()
         await modal.on_submit(self.interaction)
 
+        self.assert_thinking_placeholder(self.interaction, edit=True)
         item_count = await paginator.items_queryset.acount()
         self.assertEqual(item_count, 1)
         first_media = await paginator.items_queryset.afirst()
@@ -48,8 +49,10 @@ class MyAssessmentPaginatorTestCase(PaginatorBaseTestCase):
 
         await paginator.previous.callback(self.interaction)
 
+        self.assert_thinking_placeholder(self.interaction, edit=True)
         self.assertFalse(paginator.page)
-        self.interaction.response.edit_message.assert_called_once_with(
+        self.interaction.edit_original_response.assert_called_once_with(
+            content=None,
             embed=paginator.get_embed.return_value,
             view=paginator,
         )
@@ -70,8 +73,10 @@ class MyAssessmentPaginatorTestCase(PaginatorBaseTestCase):
 
         await paginator.next.callback(self.interaction)
 
+        self.assert_thinking_placeholder(self.interaction, edit=True)
         self.assertEqual(paginator.page, old_page + 1)
-        self.interaction.response.edit_message.assert_called_once_with(
+        self.interaction.edit_original_response.assert_called_once_with(
+            content=None,
             embed=paginator.get_embed.return_value,
             view=paginator,
         )
@@ -104,12 +109,14 @@ class MyAssessmentPaginatorTestCase(PaginatorBaseTestCase):
 
         await paginator.clear.callback(self.interaction)
 
+        self.assert_thinking_placeholder(self.interaction, edit=True)
         self.assertFalse(paginator.page)
         self.assertEqual(paginator.total_pages, 1)
         item_count = await paginator.items_queryset.acount()
         self.assertEqual(item_count, 2)
 
-        self.interaction.response.edit_message.assert_called_once_with(
+        self.interaction.edit_original_response.assert_called_once_with(
+            content=None,
             embed=paginator.get_embed.return_value,
             view=paginator,
         )
@@ -118,12 +125,13 @@ class MyAssessmentPaginatorTestCase(PaginatorBaseTestCase):
         paginator = self.get_paginator()
         paginator.page = 1
         paginator.total_pages = 5
-        paginator.items_queryset = Assessment.objects.all()
+        paginator.items_queryset_base = Assessment.objects.all()
 
         modal = paginator.modal_class(paginator=paginator)
         modal.media_name._value = self.assessment.media.name[:5].upper()
         await modal.on_submit(self.interaction)
 
+        self.assert_thinking_placeholder(self.interaction, edit=True)
         self.assertFalse(paginator.page)
         self.assertEqual(paginator.total_pages, 1)
         item_count = await paginator.items_queryset.acount()
@@ -132,7 +140,8 @@ class MyAssessmentPaginatorTestCase(PaginatorBaseTestCase):
         self.assertIsNotNone(first_assessment)
         self.assertEqual(first_assessment.id, self.assessment.id)
 
-        self.interaction.response.edit_message.assert_called_once_with(
+        self.interaction.edit_original_response.assert_called_once_with(
+            content=None,
             embed=paginator.get_embed.return_value,
             view=paginator,
         )

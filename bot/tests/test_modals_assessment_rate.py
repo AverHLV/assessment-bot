@@ -9,13 +9,13 @@ from unittest.mock import AsyncMock, patch
 from api.assessment.models import Assessment, Media
 from api.assessment.tests.factories import MediaFactory
 from api.user.tests.factories import UserFactory
-from bot.tests.base import LLMClientTestMixin
+from bot.tests.base import AssertThinkingPlaceholderMixin, LLMClientTestMixin
 from bot.views.assessment_rate import AssessmentModal
 
 User = get_user_model()
 
 
-class AssessmentModalTestCase(LLMClientTestMixin, TestCase):
+class AssessmentModalTestCase(AssertThinkingPlaceholderMixin, LLMClientTestMixin, TestCase):
     modal_class = AssessmentModal
 
     @classmethod
@@ -52,6 +52,7 @@ class AssessmentModalTestCase(LLMClientTestMixin, TestCase):
 
         await modal.on_submit(self.interaction)
 
+        self.assert_thinking_placeholder(self.interaction, edit=True)
         assessment = await self.media.assessments.filter(user_id=self.user.id).afirst()
         self.assertIsNotNone(assessment)
         self.assert_assessment_instance(assessment, self.user, self.media, self.mark)
@@ -62,7 +63,7 @@ class AssessmentModalTestCase(LLMClientTestMixin, TestCase):
         self.assertIn(self.media.description, prompt)
         self.assertIn(self.media.category.name, prompt)
 
-        self.interaction.response.edit_message.assert_called_once_with(
+        self.interaction.edit_original_response.assert_called_once_with(
             content=self.response_content,
             embed=None,
             view=None,
@@ -78,6 +79,7 @@ class AssessmentModalTestCase(LLMClientTestMixin, TestCase):
 
         await modal.on_submit(self.interaction)
 
+        self.assert_thinking_placeholder(self.interaction, edit=True)
         assessment = await self.media.assessments.filter(user_id=self.user.id).afirst()
         self.assertIsNotNone(assessment)
         self.assert_assessment_instance(assessment, self.user, self.media, self.mark, partial=self.partial)
@@ -85,7 +87,7 @@ class AssessmentModalTestCase(LLMClientTestMixin, TestCase):
         prompt = self.assert_llm_completion_mock(completion_mock)
         self.assertIn(assessment.partial, prompt)
 
-        self.interaction.response.edit_message.assert_called_once()
+        self.interaction.edit_original_response.assert_called_once()
 
     @patch('bot.modals.assessment_rate.openrouter_client.create_completion')
     @async_to_sync
@@ -96,12 +98,13 @@ class AssessmentModalTestCase(LLMClientTestMixin, TestCase):
 
         await modal.on_submit(self.interaction)
 
+        self.assert_thinking_placeholder(self.interaction, edit=True)
         assessment_exists = await self.media.assessments.filter(user_id=self.user.id).aexists()
         self.assertFalse(assessment_exists)
 
         completion_mock.assert_not_called()
-        self.interaction.response.edit_message.assert_called_once()
-        _, kwargs = self.interaction.response.edit_message.call_args
+        self.interaction.edit_original_response.assert_called_once()
+        _, kwargs = self.interaction.edit_original_response.call_args
         msg = kwargs['content']
         self.assertIn('mark', msg)
         expected_error = 'Value must be an integer or end with .5.'

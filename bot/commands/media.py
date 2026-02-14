@@ -6,7 +6,7 @@ from discord.app_commands import checks
 from api.assessment.models import Media, MediaCategory
 from bot import views
 from bot.bot import bot
-from bot.commands.base import show_thinking_placeholder
+from bot.utils import show_thinking_placeholder
 
 User = get_user_model()
 

@@ -16,6 +16,16 @@ class AsyncTestContextManager:
         return
 
 
+class AssertThinkingPlaceholderMixin:
+    @staticmethod
+    def assert_thinking_placeholder(interaction: AsyncMock, edit: bool = False) -> None:
+        expected_message = "Please wait... I'm gently sifting through fading memories."
+        if edit:
+            interaction.response.edit_message.assert_called_once_with(content=expected_message, embed=None, view=None)
+        else:
+            interaction.response.send_message.assert_called_once_with(expected_message, ephemeral=True)
+
+
 class LLMClientTestMixin:
     def setUp(self):
         super().setUp()
@@ -42,7 +52,7 @@ class LLMClientTestMixin:
         return prompt
 
 
-class CommandBaseTestCase(TestCase):
+class CommandBaseTestCase(AssertThinkingPlaceholderMixin, TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory()
@@ -51,13 +61,8 @@ class CommandBaseTestCase(TestCase):
         self.interaction = AsyncMock()
         self.interaction.user.id = self.user.external_id
 
-    @staticmethod
-    def assert_thinking_placeholder(interaction: AsyncMock) -> None:
-        expected_message = 'My gears turn, ah - still hot from the past...'
-        interaction.response.send_message.assert_called_once_with(expected_message, ephemeral=True)
 
-
-class PaginatorBaseTestCase(TestCase):
+class PaginatorBaseTestCase(AssertThinkingPlaceholderMixin, TestCase):
     paginator_class: type
     queryset: QuerySet = Assessment.objects.none()
 

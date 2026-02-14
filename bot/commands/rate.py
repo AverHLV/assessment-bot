@@ -7,7 +7,7 @@ import discord
 from api.assessment.models import Assessment, Media
 from bot import views
 from bot.bot import bot
-from bot.commands.base import show_thinking_placeholder
+from bot.utils import show_thinking_placeholder
 
 User = get_user_model()
 

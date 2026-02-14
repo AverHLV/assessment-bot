@@ -7,6 +7,7 @@ import math
 from abc import ABCMeta, abstractmethod
 
 from bot.modals import BaseFilterModal
+from bot.utils import show_thinking_placeholder
 
 
 class BasePaginator(discord.ui.View, metaclass=ABCMeta):
@@ -47,7 +48,7 @@ class BasePaginator(discord.ui.View, metaclass=ABCMeta):
 
     async def refresh(self, interaction: discord.Interaction) -> None:
         embed = await self.get_embed()
-        await interaction.response.edit_message(embed=embed, view=self)
+        await interaction.edit_original_response(content=None, embed=embed, view=self)
 
     @discord.ui.button(label='<- Prev', style=discord.ButtonStyle.secondary)
     async def previous(self, interaction: discord.Interaction, _button: discord.Button) -> None:
@@ -55,6 +56,7 @@ class BasePaginator(discord.ui.View, metaclass=ABCMeta):
             await interaction.response.defer()
             return
 
+        await show_thinking_placeholder(interaction, edit=True)
         self.page -= 1
         await self.refresh(interaction)
 
@@ -64,6 +66,7 @@ class BasePaginator(discord.ui.View, metaclass=ABCMeta):
             await interaction.response.defer()
             return
 
+        await show_thinking_placeholder(interaction, edit=True)
         self.page += 1
         await self.refresh(interaction)
 
@@ -98,5 +101,6 @@ class BaseFilterPaginator(BasePaginator, metaclass=ABCMeta):
 
     @discord.ui.button(label='Clear', style=discord.ButtonStyle.secondary)
     async def clear(self, interaction: discord.Interaction, _button: discord.Button) -> None:
+        await show_thinking_placeholder(interaction, edit=True)
         await self.clear_items_queryset()
         await self.refresh(interaction)

@@ -8,12 +8,13 @@ from unittest.mock import AsyncMock
 from api.assessment.models import Media, MediaCategory
 from api.assessment.tests.factories import MediaFactory
 from api.user.tests.factories import UserFactory
+from bot.tests.base import AssertThinkingPlaceholderMixin
 from bot.views.media import MediaModal
 
 User = get_user_model()
 
 
-class MediaModalTestCase(TestCase):
+class MediaModalTestCase(AssertThinkingPlaceholderMixin, TestCase):
     modal_class = MediaModal
 
     @classmethod
@@ -51,11 +52,12 @@ class MediaModalTestCase(TestCase):
 
         await modal.on_submit(self.interaction)
 
+        self.assert_thinking_placeholder(self.interaction, edit=True)
         media = await Media.objects.afirst()
         self.assertIsNotNone(media)
         self.assert_media_instance(media, self.user, self.name, self.url, self.category)
 
-        self.interaction.response.edit_message.assert_called_once_with(
+        self.interaction.edit_original_response.assert_called_once_with(
             content=modal.form_valid_message,
             embed=None,
             view=None,
@@ -69,11 +71,12 @@ class MediaModalTestCase(TestCase):
 
         await modal.on_submit(self.interaction)
 
+        self.assert_thinking_placeholder(self.interaction, edit=True)
         media = await Media.objects.afirst()
         self.assertIsNotNone(media)
         self.assert_media_instance(media, self.user, self.name, self.url, self.category, description=self.description)
 
-        self.interaction.response.edit_message.assert_called_once_with(
+        self.interaction.edit_original_response.assert_called_once_with(
             content=modal.form_valid_message,
             embed=None,
             view=None,
@@ -88,10 +91,11 @@ class MediaModalTestCase(TestCase):
 
         await modal.on_submit(self.interaction)
 
+        self.assert_thinking_placeholder(self.interaction, edit=True)
         media_count = await Media.objects.acount()
         self.assertEqual(media_count, 1)
 
-        self.interaction.response.edit_message.assert_called_once()
-        _, kwargs = self.interaction.response.edit_message.call_args
+        self.interaction.edit_original_response.assert_called_once()
+        _, kwargs = self.interaction.edit_original_response.call_args
         expected_error = 'Media with this Name and Category already exists.'
         self.assertIn(expected_error, kwargs['content'])
