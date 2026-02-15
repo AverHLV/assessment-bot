@@ -10,9 +10,24 @@ from bot.modals import BaseFilterModal
 from bot.utils import show_thinking_placeholder
 
 
-class BasePaginator(discord.ui.View, metaclass=ABCMeta):
+class BaseEmbed(discord.ui.View, metaclass=ABCMeta):
     embed_item_value_max_length: int = 1024
 
+    def strip_embed_item_value(self, value: str) -> str:
+        if len(value) > self.embed_item_value_max_length:
+            value = f'{value[: self.embed_item_value_max_length - 3]}...'
+        return value
+
+    async def refresh(self, interaction: discord.Interaction) -> None:
+        embed = await self.get_embed()
+        await interaction.edit_original_response(content=None, embed=embed, view=self)
+
+    @abstractmethod
+    async def get_embed(self) -> discord.Embed:
+        pass
+
+
+class BasePaginator(BaseEmbed, metaclass=ABCMeta):
     def __init__(self, items_queryset: QuerySet, item_count: int, per_page: int = 10, **kwargs):
         if per_page > settings.BOT_PAGE_SIZE:
             raise ValueError(f'The given page size exceeds the Discord limit: {per_page}')
@@ -23,11 +38,6 @@ class BasePaginator(discord.ui.View, metaclass=ABCMeta):
         self.per_page = per_page
         self.items_queryset = items_queryset
         self.set_total_pages(item_count)
-
-    def strip_embed_item_value(self, value: str) -> str:
-        if len(value) > self.embed_item_value_max_length:
-            value = f'{value[: self.embed_item_value_max_length - 3]}...'
-        return value
 
     def set_total_pages(self, item_count: int) -> None:
         self.total_pages = math.ceil(item_count / self.per_page)
@@ -45,10 +55,6 @@ class BasePaginator(discord.ui.View, metaclass=ABCMeta):
             embed.add_field(name='No items found', value='')
 
         return embed
-
-    async def refresh(self, interaction: discord.Interaction) -> None:
-        embed = await self.get_embed()
-        await interaction.edit_original_response(content=None, embed=embed, view=self)
 
     @discord.ui.button(label='<- Prev', style=discord.ButtonStyle.secondary)
     async def previous(self, interaction: discord.Interaction, _button: discord.Button) -> None:

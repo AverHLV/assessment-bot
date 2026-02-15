@@ -19,3 +19,8 @@ class MediaQuerySet(models.QuerySet):
             .exclude(assessments__user_id=user_id)
             .order_by('assessment_until_dt', 'name')
         )
+
+
+class PollQuerySet(models.QuerySet):
+    def initial(self, **kwargs):
+        return self.filter(status=self.model.Status.INITIAL, **kwargs)

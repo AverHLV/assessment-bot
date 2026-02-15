@@ -31,3 +31,29 @@ class AssessmentFactory(factory.django.DjangoModelFactory):
     @pause_date_auto_fields(fields=['create_dt'])
     def _create(cls, *args, **kwargs):
         return super()._create(*args, **kwargs)
+
+
+class PollFactory(factory.django.DjangoModelFactory):
+    name = factory.fuzzy.FuzzyText(length=10)
+    winner = factory.SubFactory(MediaFactory)
+
+    class Meta:
+        model = models.Poll
+
+    @classmethod
+    @pause_date_auto_fields(fields=['create_dt'])
+    def _create(cls, *args, **kwargs):
+        return super()._create(*args, **kwargs)
+
+    @factory.post_generation
+    def candidates(self, _create: bool, extracted: list, **_kwargs) -> None:
+        if extracted:
+            self.candidates.add(*extracted)
+
+
+class VoteFactory(factory.django.DjangoModelFactory):
+    poll = factory.SubFactory(PollFactory)
+    voter = factory.SubFactory(UserFactory)
+
+    class Meta:
+        model = models.Vote
