@@ -91,3 +91,30 @@ class AssessmentAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         only_fields = 'mark', 'partial', 'create_dt', 'media_id', 'user_id', 'media__name', 'user__username'
         return super().get_queryset(request).only(*only_fields)
+
+
+class VoteInline(admin.TabularInline):
+    model = models.Vote
+    ordering = ('voter__username',)
+
+
+@admin.register(models.Poll)
+class PollAdmin(admin.ModelAdmin):
+    list_display = 'id', 'name', 'create_dt', 'update_dt', 'status', 'display_winner'
+    list_display_links = list_display
+    list_select_related = ('winner',)
+    list_filter = ('status',)
+    search_fields = ('name',)
+    readonly_fields = 'id', 'create_dt', 'update_dt'
+    ordering = ('-create_dt',)
+    filter_horizontal = ('candidates',)
+    inlines = (VoteInline,)
+
+    def display_winner(self, obj: models.Poll) -> str:
+        return obj.winner.name if obj.winner_id else '-'
+
+    display_winner.short_description = 'Winner'
+
+    def get_queryset(self, request):
+        only_fields = 'name', 'create_dt', 'update_dt', 'status', 'winner_id', 'winner__name'
+        return super().get_queryset(request).only(*only_fields)
