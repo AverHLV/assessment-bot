@@ -22,10 +22,10 @@ class PollViewTestCase(AssertThinkingPlaceholderMixin, TestCase):
 
     def setUp(self):
         self.interaction = AsyncMock()
-
-    def get_view(self) -> view_class:
         # prevent an async operation on view init
         models.prefetch_related_objects([self.poll], 'candidates')
+
+    def get_view(self) -> view_class:
         return self.view_class(user=self.user, poll=self.poll)
 
     async def test__poll_view__get_embed(self):
