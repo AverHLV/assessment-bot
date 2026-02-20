@@ -16,12 +16,20 @@ async def vote(interaction: discord.Interaction) -> None:
     await show_thinking_placeholder(interaction)
     user = await User.objects.aget_or_create_by_discord(interaction.user)
 
-    media = Media.objects.initial().exclude(creator_id=user.id).only('name', 'url', 'description').order_by('?')
+    media_base = Media.objects.initial().exclude(creator_id=user.id)
+    media = media_base.only('name', 'url', 'description').order_by('?')
+    candidate_exists = media_base.filter(polls__id=models.OuterRef('id')).values('id')
 
-    votes = Vote.objects.filter(voter_id=user.id, poll_id=models.OuterRef('id'), ranks__len__gt=0).values('id')
+    voter_exists = Vote.objects.filter(voter_id=user.id, poll_id=models.OuterRef('id')).values('id')
+    vote_exists = voter_exists.filter(ranks__len__gt=0)
+
     polls = (
-        Poll.objects.alias(vote_exists=models.Exists(votes))
-        .initial(vote_exists=False)
+        Poll.objects.alias(
+            candidate_exists=models.Exists(candidate_exists),
+            voter_exists=models.Exists(voter_exists),
+            vote_exists=models.Exists(vote_exists),
+        )
+        .initial(candidate_exists=True, voter_exists=True, vote_exists=False)
         .prefetch_related(models.Prefetch(lookup='candidates', queryset=media))
         .only('name')
         .order_by('-create_dt')

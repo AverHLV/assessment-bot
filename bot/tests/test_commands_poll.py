@@ -12,12 +12,24 @@ from bot.tests.base import CommandBaseTestCase
 
 
 class VoteTestCase(CommandBaseTestCase):
-    async def test__vote(self):
-        current_time = timezone.now()
-        polls = await sync_to_async(PollFactory.create_batch)(
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.other_user = UserFactory()
+        cls.candidates = MediaFactory.create_batch(
             size=2,
-            create_dt=factory.Iterator((current_time, current_time - timedelta(hours=1))),
+            creator=factory.Iterator((cls.user, cls.other_user)),
         )
+        cls.poll = PollFactory(candidates=cls.candidates)
+
+    async def test__vote(self):
+        other_poll = await sync_to_async(PollFactory)(
+            candidates=self.candidates,
+            create_dt=timezone.now() - timedelta(hours=1),
+        )
+        polls = [self.poll, other_poll]
+        await sync_to_async(VoteFactory.create_batch)(size=len(polls), poll=factory.Iterator(polls), voter=self.user)
 
         await commands.vote.callback(self.interaction)
 
@@ -40,7 +52,7 @@ class VoteTestCase(CommandBaseTestCase):
             self.assertEqual(option.label, poll.name)
             self.assertEqual(option.value, str(poll.id))
 
-    async def test__vote__no_polls(self):
+    async def test__vote__no_invited(self):
         await commands.vote.callback(self.interaction)
 
         self.assert_thinking_placeholder(self.interaction)
@@ -48,8 +60,7 @@ class VoteTestCase(CommandBaseTestCase):
         self.interaction.edit_original_response.assert_called_once_with(content=expected_message)
 
     async def test__vote__already_voted(self):
-        poll = await sync_to_async(PollFactory.create)()
-        await sync_to_async(VoteFactory.create)(poll=poll, voter=self.user, ranks=[1])
+        await sync_to_async(VoteFactory.create)(poll=self.poll, voter=self.user, ranks=[1])
 
         await commands.vote.callback(self.interaction)
 
@@ -59,12 +70,7 @@ class VoteTestCase(CommandBaseTestCase):
         self.assertNotIn('view', kwargs)
 
     async def test__vote__no_own_candidates(self):
-        other_user = await sync_to_async(UserFactory.create)()
-        candidates = await sync_to_async(MediaFactory.create_batch)(
-            size=2,
-            creator=factory.Iterator((other_user, self.user)),
-        )
-        poll = await sync_to_async(PollFactory.create)(candidates=candidates)
+        await sync_to_async(VoteFactory.create)(poll=self.poll, voter=self.user)
 
         await commands.vote.callback(self.interaction)
 
@@ -72,6 +78,7 @@ class VoteTestCase(CommandBaseTestCase):
         self.interaction.edit_original_response.assert_called_once()
         _, kwargs = self.interaction.edit_original_response.call_args
         poll_select = kwargs['view']._children[0]
-        actual_poll = poll_select.poll_mapping[poll.id]
+        actual_poll = poll_select.poll_mapping[self.poll.id]
         actual_candidates = list(actual_poll.candidates.all())
-        self.assertListEqual(actual_candidates, [candidates[0]])
+        expected_candidates = [self.candidates[1]]
+        self.assertListEqual(actual_candidates, expected_candidates)
