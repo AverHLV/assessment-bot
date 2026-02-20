@@ -51,4 +51,3 @@ format = """sh -c '
 '
 """
 migrate = "./manage.py migrate --no-input"
-collectstatic = "./manage.py collectstatic --no-input"
