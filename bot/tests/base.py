@@ -1,7 +1,7 @@
 from django.db.models import QuerySet
 from django.test import TestCase
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 from api.assessment.models import Assessment
 from api.llm.clients import AsyncOpenRouterClient
@@ -14,6 +14,18 @@ class AsyncTestContextManager:
 
     async def __aexit__(self, exc_type, exc, traceback) -> None:
         return
+
+
+def get_async_context_manager_mock() -> Mock:
+    manager_mock = AsyncMock(spec=AsyncTestContextManager())
+    return Mock(return_value=manager_mock)
+
+
+def get_async_iterator_mock(values: list) -> Mock:
+    content_mock = AsyncMock()
+    content_mock.__aiter__ = Mock(return_value=content_mock)
+    content_mock.__anext__.side_effect = *values, StopAsyncIteration
+    return Mock(return_value=content_mock)
 
 
 class AssertThinkingPlaceholderMixin:

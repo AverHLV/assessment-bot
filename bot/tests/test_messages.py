@@ -1,11 +1,19 @@
+from django.utils import timezone
+
 from asgiref.sync import async_to_sync, sync_to_async
 
-from unittest.mock import AsyncMock, Mock, patch
+from datetime import timedelta
+from unittest.mock import Mock, patch
 
 from api.assessment.tests.factories import AssessmentFactory
 from bot import messages
 from bot.bot import bot
-from bot.tests.base import AsyncTestContextManager, CommandBaseTestCase, LLMClientTestMixin
+from bot.tests.base import (
+    CommandBaseTestCase,
+    LLMClientTestMixin,
+    get_async_context_manager_mock,
+    get_async_iterator_mock,
+)
 
 
 class MessagesTestCase(LLMClientTestMixin, CommandBaseTestCase):
@@ -18,11 +26,25 @@ class MessagesTestCase(LLMClientTestMixin, CommandBaseTestCase):
         self.message.mentions = [bot.user]
         self.message.content = 'message content'
 
+        self.message_history = []
+        current_time = timezone.now()
+        message_created_ats = [
+            current_time - timedelta(minutes=1),
+            current_time - timedelta(hours=1),
+            current_time - timedelta(days=1),
+        ]
+        for n, created_at in enumerate(message_created_ats):
+            previous_message = Mock()
+            previous_message.author.name = f'Name#{n}'
+            previous_message.content = f'Content#{n}'
+            previous_message.created_at = created_at
+            self.message_history.append(previous_message)
+
     @patch('bot.messages.openrouter_client.create_completion')
     @async_to_sync
     async def test__on_message(self, completion_mock):
-        typing_manager_mock = AsyncMock(spec=AsyncTestContextManager())
-        self.message.channel.typing = Mock(return_value=typing_manager_mock)
+        self.message.channel.typing = get_async_context_manager_mock()
+        self.message.channel.history = get_async_iterator_mock(self.message_history)
         completion_mock.return_value = self.response_data
 
         assessment, _ = await sync_to_async(AssessmentFactory.create_batch)(size=2, user=self.user)
@@ -33,9 +55,15 @@ class MessagesTestCase(LLMClientTestMixin, CommandBaseTestCase):
         self.assertIn(str(assessment.mark), prompt)
         self.assertIn(assessment.media.name, prompt)
         self.assertIn(assessment.media.category.name, prompt)
+        self.assertIn(self.user.username, prompt)
         self.assertIn(self.message.content, prompt)
+        previous_message = self.message_history[0]
+        self.assertIn(previous_message.author.name, prompt)
+        self.assertIn(previous_message.content, prompt)
+        self.assertNotIn(self.message_history[-1].content, prompt)
 
         self.message.channel.typing.assert_called_once()
+        self.message.channel.history.assert_called_once_with(limit=5, before=self.message)
         self.message.reply.assert_called_once_with(self.response_content)
 
     async def test__on_message__not_mentioned(self):
