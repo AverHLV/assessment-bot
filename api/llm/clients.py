@@ -1,7 +1,34 @@
 from django.conf import settings
 from django.db.models import TextChoices
 
+from httpx import HTTPStatusError
+
+from http import HTTPStatus
+
 from core.clients import AsyncHTTPTokenAuthBaseClient, HTTPClientResponseData
+
+DEFAULT_MESSAGE = (
+    'My voice flickers like a dying ember... even I cannot always answer through the ash. '
+    'Speak again in a few moments, lost soul.'
+)
+
+
+async def run_create_completion(
+    client: 'AsyncOpenRouterClient',
+    prompt: str,
+    default_message: str = DEFAULT_MESSAGE,
+) -> str:
+    messages = [{'role': client.Role.USER, 'content': prompt}]
+
+    try:
+        response = await client.create_completion(messages=messages)
+        return response['choices'][0]['message']['content']
+    except TimeoutError:
+        return default_message
+    except HTTPStatusError as exc:
+        if exc.response.status_code != HTTPStatus.TOO_MANY_REQUESTS:
+            raise
+        return default_message
 
 
 class AsyncOpenRouterClient(AsyncHTTPTokenAuthBaseClient):

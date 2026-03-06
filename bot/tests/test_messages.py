@@ -6,16 +6,12 @@ from datetime import timedelta
 from unittest.mock import Mock, patch
 
 from api.assessment.tests.factories import AssessmentFactory
+from api.llm.clients import AsyncOpenRouterClient
 from bot import messages
-from bot.tests.base import (
-    CogWithCommandsBaseTestCase,
-    LLMClientTestMixin,
-    get_async_context_manager_mock,
-    get_async_iterator_mock,
-)
+from bot.tests.base import CogWithCommandsBaseTestCase, get_async_context_manager_mock, get_async_iterator_mock
 
 
-class MessageCogTestCase(LLMClientTestMixin, CogWithCommandsBaseTestCase):
+class MessageCogTestCase(CogWithCommandsBaseTestCase):
     cog_class = messages.MessageCog
 
     def setUp(self):
@@ -41,18 +37,21 @@ class MessageCogTestCase(LLMClientTestMixin, CogWithCommandsBaseTestCase):
             previous_message.created_at = created_at
             self.message_history.append(previous_message)
 
-    @patch('bot.messages.openrouter_client.create_completion')
+    @patch('bot.messages.run_create_completion')
     @async_to_sync
     async def test__message_cog__on_message(self, completion_mock):
         self.message.channel.typing = get_async_context_manager_mock()
         self.message.channel.history = get_async_iterator_mock(self.message_history)
-        completion_mock.return_value = self.response_data
+        completion_mock.return_value = 'response content'
 
         assessment, _ = await sync_to_async(AssessmentFactory.create_batch)(size=2, user=self.user)
 
         await self.cog.on_message(self.message)
 
-        prompt = self.assert_llm_completion_mock(completion_mock)
+        completion_mock.assert_called_once()
+        args, _ = completion_mock.call_args
+        openrouter_client, prompt = args
+        self.assertIsInstance(openrouter_client, AsyncOpenRouterClient)
         self.assertIn(str(assessment.mark), prompt)
         self.assertIn(assessment.media.name, prompt)
         self.assertIn(assessment.media.category.name, prompt)
@@ -65,7 +64,7 @@ class MessageCogTestCase(LLMClientTestMixin, CogWithCommandsBaseTestCase):
 
         self.message.channel.typing.assert_called_once()
         self.message.channel.history.assert_called_once_with(limit=5, before=self.message)
-        self.message.reply.assert_called_once_with(self.response_content)
+        self.message.reply.assert_called_once_with(completion_mock.return_value)
 
     async def test__message_cog__on_message__not_mentioned(self):
         self.message.mentions = []

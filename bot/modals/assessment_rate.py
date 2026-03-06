@@ -6,7 +6,7 @@ from django.template.loader import render_to_string
 import discord
 
 from api.assessment.models import Assessment, Media
-from api.llm import openrouter_client
+from api.llm import openrouter_client, run_create_completion
 from bot.forms import AssessmentForm
 from bot.modals.base import BaseCreateModal
 from bot.modals.media import MediaFilterModal
@@ -34,6 +34,7 @@ class AssessmentModal(BaseCreateModal):
 
     form_class = AssessmentForm
     llm_client = openrouter_client
+    llm_client_default_message = 'Saved. Your judgment already echoes through my rusted core.'
 
     def __init__(self, *args, user: User, media: Media, **kwargs):
         default_title = media.name if len(media.name) <= 45 else f'{media.name[:42]}...'
@@ -51,10 +52,7 @@ class AssessmentModal(BaseCreateModal):
     async def form_valid(self, form: forms.ModelForm) -> str:
         context = {'assessment': await self.save(form)}
         prompt = render_to_string(template_name='assessment.html', context=context)
-
-        messages = [{'role': self.llm_client.Role.USER, 'content': prompt}]
-        response = await self.llm_client.create_completion(messages=messages)
-        return response['choices'][0]['message']['content']
+        return await run_create_completion(self.llm_client, prompt, default_message=self.llm_client_default_message)
 
 
 class MyAssessmentFilterModal(MediaFilterModal):

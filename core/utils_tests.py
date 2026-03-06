@@ -2,9 +2,11 @@ from django.test import override_settings
 from django.test.runner import DiscoverRunner
 
 import sentry_sdk
+from httpx import Request, Response
 
 import logging
 from collections.abc import Callable
+from http import HTTPStatus
 
 
 def get_log_record(**kwargs) -> logging.LogRecord:
@@ -14,6 +16,16 @@ def get_log_record(**kwargs) -> logging.LogRecord:
         **kwargs,
     }
     return logging.makeLogRecord(data)
+
+
+def get_httpx_test_response(
+    status_code: int = HTTPStatus.NOT_FOUND,
+    content: bytes = None,
+    text: str = None,
+    body: dict | list = None,
+) -> Response:
+    request = Request(method='GET', url='http://test')
+    return Response(status_code=status_code, content=content, text=text, json=body, request=request)
 
 
 def pause_date_auto_fields(fields: list) -> Callable:

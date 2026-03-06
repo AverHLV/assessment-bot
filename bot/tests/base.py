@@ -4,7 +4,6 @@ from django.test import TestCase
 from unittest.mock import AsyncMock, Mock
 
 from api.assessment.models import Assessment
-from api.llm.clients import AsyncOpenRouterClient
 from api.user.tests.factories import UserFactory
 from bot.cog import BaseCog
 
@@ -27,32 +26,6 @@ def get_async_iterator_mock(values: list) -> Mock:
     content_mock.__aiter__ = Mock(return_value=content_mock)
     content_mock.__anext__.side_effect = *values, StopAsyncIteration
     return Mock(return_value=content_mock)
-
-
-class LLMClientTestMixin:
-    def setUp(self):
-        super().setUp()
-
-        self.response_content = 'response content'
-        self.response_data = {
-            'choices': [
-                {
-                    'message': {
-                        'content': self.response_content,
-                    },
-                },
-            ],
-        }
-
-    def assert_llm_completion_mock(self, mock: AsyncMock) -> str:
-        mock.assert_called_once()
-        _, kwargs = mock.call_args
-        self.assertIn('messages', kwargs)
-        message = kwargs['messages'][0]
-        self.assertEqual(message['role'], AsyncOpenRouterClient.Role.USER)
-        prompt = message['content']
-        self.assertTrue(prompt)
-        return prompt
 
 
 class CogBaseTestCase(TestCase):

@@ -6,7 +6,7 @@ import discord
 
 from datetime import timedelta
 
-from api.llm import openrouter_client
+from api.llm import openrouter_client, run_create_completion
 from bot.cog import BaseCog
 
 User = get_user_model()
@@ -45,9 +45,6 @@ class MessageCog(BaseCog):
                 'message_history': message_history,
             }
             prompt = render_to_string(template_name='message.html', context=context)
-
-            messages = [{'role': openrouter_client.Role.USER, 'content': prompt}]
-            response = await openrouter_client.create_completion(messages=messages)
-            response = response['choices'][0]['message']['content']
+            response = await run_create_completion(openrouter_client, prompt)
 
         await message.reply(response)

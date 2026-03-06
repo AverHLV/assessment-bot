@@ -8,13 +8,13 @@ from unittest.mock import AsyncMock, patch
 from api.assessment.models import Assessment, Media
 from api.assessment.tests.factories import MediaFactory
 from api.user.tests.factories import UserFactory
-from bot.tests.base import CogBaseTestCase, LLMClientTestMixin
+from bot.tests.base import CogBaseTestCase
 from bot.views.assessment_rate import AssessmentModal
 
 User = get_user_model()
 
 
-class AssessmentModalTestCase(LLMClientTestMixin, CogBaseTestCase):
+class AssessmentModalTestCase(CogBaseTestCase):
     modal_class = AssessmentModal
 
     @classmethod
@@ -27,6 +27,7 @@ class AssessmentModalTestCase(LLMClientTestMixin, CogBaseTestCase):
 
         self.mark = '5.5'
         self.partial = '1 / 5 episodes'
+        self.completion_response = 'response content'
         self.interaction = AsyncMock()
 
     def assert_assessment_instance(
@@ -42,10 +43,10 @@ class AssessmentModalTestCase(LLMClientTestMixin, CogBaseTestCase):
         self.assertEqual(assessment.media_id, media.id)
         self.assertEqual(assessment.user_id, user.id)
 
-    @patch('bot.modals.assessment_rate.openrouter_client.create_completion')
+    @patch('bot.modals.assessment_rate.run_create_completion')
     @async_to_sync
     async def test__assessment_modal__on_submit(self, completion_mock):
-        completion_mock.return_value = self.response_data
+        completion_mock.return_value = self.completion_response
         modal = self.modal_class(user=self.user, media=self.media)
         modal.mark._value = self.mark
 
@@ -56,22 +57,26 @@ class AssessmentModalTestCase(LLMClientTestMixin, CogBaseTestCase):
         self.assertIsNotNone(assessment)
         self.assert_assessment_instance(assessment, self.user, self.media, self.mark)
 
-        prompt = self.assert_llm_completion_mock(completion_mock)
+        completion_mock.assert_called_once()
+        args, kwargs = completion_mock.call_args
+        prompt = args[1]
         self.assertIn(str(assessment.mark), prompt)
         self.assertIn(self.media.name, prompt)
         self.assertIn(self.media.description, prompt)
         self.assertIn(self.media.category.name, prompt)
+        expected_default_message = 'Saved. Your judgment already echoes through my rusted core.'
+        self.assertEqual(kwargs['default_message'], expected_default_message)
 
         self.interaction.edit_original_response.assert_called_once_with(
-            content=self.response_content,
+            content=completion_mock.return_value,
             embed=None,
             view=None,
         )
 
-    @patch('bot.modals.assessment_rate.openrouter_client.create_completion')
+    @patch('bot.modals.assessment_rate.run_create_completion')
     @async_to_sync
     async def test__assessment_modal__on_submit__partial(self, completion_mock):
-        completion_mock.return_value = self.response_data
+        completion_mock.return_value = self.completion_response
         modal = self.modal_class(user=self.user, media=self.media)
         modal.mark._value = self.mark
         modal.partial._value = self.partial
@@ -83,12 +88,13 @@ class AssessmentModalTestCase(LLMClientTestMixin, CogBaseTestCase):
         self.assertIsNotNone(assessment)
         self.assert_assessment_instance(assessment, self.user, self.media, self.mark, partial=self.partial)
 
-        prompt = self.assert_llm_completion_mock(completion_mock)
-        self.assertIn(assessment.partial, prompt)
+        completion_mock.assert_called_once()
+        args, _ = completion_mock.call_args
+        self.assertIn(assessment.partial, args[1])
 
         self.interaction.edit_original_response.assert_called_once()
 
-    @patch('bot.modals.assessment_rate.openrouter_client.create_completion')
+    @patch('bot.modals.assessment_rate.run_create_completion')
     @async_to_sync
     async def test__assessment_modal__on_submit__errors__validation_error(self, completion_mock):
         self.mark = '4.3'
