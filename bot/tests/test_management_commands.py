@@ -6,7 +6,7 @@ from asgiref.sync import async_to_sync
 
 from unittest.mock import AsyncMock, patch
 
-from bot.management.commands.start_bot import Command as AssessmentBotCommand
+from bot.management.commands.start_bot import Command as StartBotCommand
 
 
 class ExitFromCommand(BaseException):
@@ -15,30 +15,32 @@ class ExitFromCommand(BaseException):
     pass
 
 
-class AssessmentBotTestCase(TestCase):
-    @patch('bot.management.commands.start_bot.bot', new_callable=AsyncMock)
+class StartBotTestCase(TestCase):
+    command = StartBotCommand
+
+    @patch('bot.management.commands.start_bot.get_assessment_bot', new_callable=AsyncMock)
     @async_to_sync
-    async def test__assessment_bot(self, bot_mock):
-        bot_mock.start.side_effect = ExitFromCommand
+    async def test__start_bot(self, bot_mock):
+        bot_mock.return_value.__aenter__.return_value.start.side_effect = ExitFromCommand
 
         with self.assertRaises(ExitFromCommand):
-            await AssessmentBotCommand().handle_async()
+            await self.command().handle_async()
 
-        bot_mock.start.assert_called_once_with(settings.BOT_TOKEN)
+        bot_mock.return_value.__aenter__.return_value.start.assert_called_once_with(settings.BOT_TOKEN)
 
     @patch('asyncio.sleep', new_callable=AsyncMock)
-    @patch('bot.management.commands.start_bot.bot', new_callable=AsyncMock)
+    @patch('bot.management.commands.start_bot.get_assessment_bot', new_callable=AsyncMock)
     @async_to_sync
-    async def test__assessment_bot__restart(self, bot_mock, sleep_mock):
-        bot_mock.start.side_effect = ValueError('error'), ExitFromCommand
+    async def test__start_bot__restart(self, bot_mock, sleep_mock):
+        bot_mock.return_value.__aenter__.return_value.start.side_effect = ValueError('error'), ExitFromCommand
 
         with self.assertRaises(ExitFromCommand):
-            await AssessmentBotCommand().handle_async()
+            await self.command().handle_async()
 
-        self.assertEqual(bot_mock.start.call_count, 2)
+        self.assertEqual(bot_mock.return_value.__aenter__.return_value.start.call_count, 2)
         sleep_mock.assert_called_once()
 
-    def test__assessment_bot__command(self):
-        with patch.object(AssessmentBotCommand, 'handle_async', new_callable=AsyncMock) as mock:
+    def test__start_bot__command(self):
+        with patch.object(self.command, 'handle_async', new_callable=AsyncMock) as mock:
             call_command('start_bot')
         mock.assert_called_once()

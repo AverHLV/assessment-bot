@@ -6,7 +6,7 @@ import uvloop
 import asyncio
 import logging
 
-from bot.bot import bot
+from bot.bot import get_assessment_bot
 
 logger = logging.getLogger(__name__)
 
@@ -30,5 +30,5 @@ class Command(BaseCommand):
 
     @staticmethod
     async def coroutine() -> None:
-        async with bot:
+        async with await get_assessment_bot() as bot:
             await bot.start(settings.BOT_TOKEN)

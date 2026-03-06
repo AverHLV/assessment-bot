@@ -8,11 +8,13 @@ from datetime import timedelta
 from api.assessment.models import MediaCategory
 from api.assessment.tests.factories import MediaFactory
 from bot import commands
-from bot.tests.base import CommandBaseTestCase
+from bot.tests.base import CogWithCommandsBaseTestCase
 
 
-class FutureMediaTestCase(CommandBaseTestCase):
-    async def test__future_media(self):
+class MediaCogTestCase(CogWithCommandsBaseTestCase):
+    cog_class = commands.MediaCog
+
+    async def test__media_cog__future_media(self):
         current_time = timezone.now()
         media = await sync_to_async(MediaFactory.create_batch)(
             size=2,
@@ -20,7 +22,7 @@ class FutureMediaTestCase(CommandBaseTestCase):
             create_dt=factory.Iterator((current_time, current_time - timedelta(hours=1))),
         )
 
-        await commands.future_media.callback(self.interaction)
+        await self.cog.future_media.callback(self.cog, self.interaction)
 
         self.assert_thinking_placeholder(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
@@ -41,20 +43,18 @@ class FutureMediaTestCase(CommandBaseTestCase):
             self.assertIn(media_obj.url, field['value'])
             self.assertIn(media_obj.description, field['value'])
 
-    async def test__future_media__no_media(self):
-        await commands.future_media.callback(self.interaction)
+    async def test__media_cog__future_media__no_media(self):
+        await self.cog.future_media.callback(self.cog, self.interaction)
 
         self.assert_thinking_placeholder(self.interaction)
         expected_message = 'Nothing remains reserved for later. Even tomorrow feels empty.'
         self.interaction.edit_original_response.assert_called_once_with(content=expected_message)
 
-
-class AddFutureMediaTestCase(CommandBaseTestCase):
-    async def test__add_future_media(self):
+    async def test__media_cog__add_future_media(self):
         media_categories = MediaCategory.objects.order_by('name')
         media_categories = [category async for category in media_categories]
 
-        await commands.add_future_media.callback(self.interaction)
+        await self.cog.add_future_media.callback(self.cog, self.interaction)
 
         self.assert_thinking_placeholder(self.interaction)
         self.interaction.edit_original_response.assert_called_once()

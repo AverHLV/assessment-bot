@@ -8,10 +8,12 @@ from datetime import timedelta
 from api.assessment.tests.factories import MediaFactory, PollFactory, VoteFactory
 from api.user.tests.factories import UserFactory
 from bot import commands
-from bot.tests.base import CommandBaseTestCase
+from bot.tests.base import CogWithCommandsBaseTestCase
 
 
-class VoteTestCase(CommandBaseTestCase):
+class PollCogTestCase(CogWithCommandsBaseTestCase):
+    cog_class = commands.PollCog
+
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -23,7 +25,7 @@ class VoteTestCase(CommandBaseTestCase):
         )
         cls.poll = PollFactory(candidates=cls.candidates)
 
-    async def test__vote(self):
+    async def test__poll_cog__vote(self):
         other_poll = await sync_to_async(PollFactory)(
             candidates=self.candidates,
             create_dt=timezone.now() - timedelta(hours=1),
@@ -31,7 +33,7 @@ class VoteTestCase(CommandBaseTestCase):
         polls = [self.poll, other_poll]
         await sync_to_async(VoteFactory.create_batch)(size=len(polls), poll=factory.Iterator(polls), voter=self.user)
 
-        await commands.vote.callback(self.interaction)
+        await self.cog.vote.callback(self.cog, self.interaction)
 
         self.assert_thinking_placeholder(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
@@ -52,27 +54,27 @@ class VoteTestCase(CommandBaseTestCase):
             self.assertEqual(option.label, poll.name)
             self.assertEqual(option.value, str(poll.id))
 
-    async def test__vote__no_invited(self):
-        await commands.vote.callback(self.interaction)
+    async def test__poll_cog__vote__no_invited(self):
+        await self.cog.vote.callback(self.cog, self.interaction)
 
         self.assert_thinking_placeholder(self.interaction)
         expected_message = 'Silence. There is no future to cast.'
         self.interaction.edit_original_response.assert_called_once_with(content=expected_message)
 
-    async def test__vote__already_voted(self):
+    async def test__poll_cog__vote__already_voted(self):
         await sync_to_async(VoteFactory.create)(poll=self.poll, voter=self.user, ranks=[1])
 
-        await commands.vote.callback(self.interaction)
+        await self.cog.vote.callback(self.cog, self.interaction)
 
         self.assert_thinking_placeholder(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
         _, kwargs = self.interaction.edit_original_response.call_args
         self.assertNotIn('view', kwargs)
 
-    async def test__vote__no_own_candidates(self):
+    async def test__poll_cog__vote__no_own_candidates(self):
         await sync_to_async(VoteFactory.create)(poll=self.poll, voter=self.user)
 
-        await commands.vote.callback(self.interaction)
+        await self.cog.vote.callback(self.cog, self.interaction)
 
         self.assert_thinking_placeholder(self.interaction)
         self.interaction.edit_original_response.assert_called_once()

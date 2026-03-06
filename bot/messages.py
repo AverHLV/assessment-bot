@@ -7,41 +7,47 @@ import discord
 from datetime import timedelta
 
 from api.llm import openrouter_client
-from bot.bot import bot
+from bot.cog import BaseCog
 
 User = get_user_model()
 
 
-@bot.event
-async def on_message(message: discord.Message) -> None:
-    if message.author.bot or bot.user not in message.mentions:
-        return
+class MessageCog(BaseCog):
+    async def get_user(self, interaction: discord.Message) -> User:
+        return await User.objects.aget_or_create_by_discord(interaction.author)
 
-    async with message.channel.typing():
-        user = await User.objects.aget_or_create_by_discord(message.author)
-        only_fields = 'mark', 'partial', 'media_id', 'media__name', 'media__category_id', 'media__category__name'
-        assessments = (
-            user.assessments.select_related('media', 'media__category').only(*only_fields).order_by('-create_dt')[:10]
-        )
+    @BaseCog.listener()
+    async def on_message(self, message: discord.Message) -> None:
+        if message.author.bot or self.bot.user not in message.mentions:
+            return
 
-        message_from = timezone.now() - timedelta(hours=3)
-        message_history = message.channel.history(limit=5, before=message)
-        message_history = [
-            {'author': previous_message.author.name, 'message': previous_message.content}
-            async for previous_message in message_history
-            if previous_message.created_at > message_from
-        ]
+        async with message.channel.typing():
+            user = await self.get_user(message)
+            only_fields = 'mark', 'partial', 'media_id', 'media__name', 'media__category_id', 'media__category__name'
+            assessments = (
+                user.assessments.select_related('media', 'media__category')
+                .only(*only_fields)
+                .order_by('-create_dt')[:10]
+            )
 
-        context = {
-            'user': user,
-            'assessments': [assessment async for assessment in assessments],
-            'message': message.content,
-            'message_history': message_history,
-        }
-        prompt = render_to_string(template_name='message.html', context=context)
+            message_from = timezone.now() - timedelta(hours=3)
+            message_history = message.channel.history(limit=5, before=message)
+            message_history = [
+                {'author': previous_message.author.name, 'message': previous_message.content}
+                async for previous_message in message_history
+                if previous_message.created_at > message_from
+            ]
 
-        messages = [{'role': openrouter_client.Role.USER, 'content': prompt}]
-        response = await openrouter_client.create_completion(messages=messages)
-        response = response['choices'][0]['message']['content']
+            context = {
+                'user': user,
+                'assessments': [assessment async for assessment in assessments],
+                'message': message.content,
+                'message_history': message_history,
+            }
+            prompt = render_to_string(template_name='message.html', context=context)
 
-    await message.reply(response)
+            messages = [{'role': openrouter_client.Role.USER, 'content': prompt}]
+            response = await openrouter_client.create_completion(messages=messages)
+            response = response['choices'][0]['message']['content']
+
+        await message.reply(response)

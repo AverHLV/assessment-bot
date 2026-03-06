@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase
 
 from asgiref.sync import async_to_sync
 
@@ -9,13 +8,13 @@ from unittest.mock import AsyncMock, patch
 from api.assessment.models import Assessment, Media
 from api.assessment.tests.factories import MediaFactory
 from api.user.tests.factories import UserFactory
-from bot.tests.base import AssertThinkingPlaceholderMixin, LLMClientTestMixin
+from bot.tests.base import CogBaseTestCase, LLMClientTestMixin
 from bot.views.assessment_rate import AssessmentModal
 
 User = get_user_model()
 
 
-class AssessmentModalTestCase(AssertThinkingPlaceholderMixin, LLMClientTestMixin, TestCase):
+class AssessmentModalTestCase(LLMClientTestMixin, CogBaseTestCase):
     modal_class = AssessmentModal
 
     @classmethod

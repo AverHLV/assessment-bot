@@ -9,13 +9,15 @@ from datetime import timedelta
 from api.assessment.models import Media
 from api.assessment.tests.factories import AssessmentFactory, MediaFactory
 from bot import commands
-from bot.tests.base import CommandBaseTestCase
+from bot.tests.base import CogWithCommandsBaseTestCase
 
 User = get_user_model()
 
 
-class RatesTestCase(CommandBaseTestCase):
-    async def test__rates(self):
+class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
+    cog_class = commands.AssessmentCog
+
+    async def test__assessment_cog__rates(self):
         current_time = timezone.now()
         assessments = await sync_to_async(AssessmentFactory.create_batch)(
             size=2,
@@ -24,7 +26,7 @@ class RatesTestCase(CommandBaseTestCase):
             media__assessment_status=Media.AssessmentStatus.COMPLETED,
         )
 
-        await commands.rates.callback(self.interaction)
+        await self.cog.rates.callback(self.cog, self.interaction)
 
         self.assert_thinking_placeholder(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
@@ -45,16 +47,14 @@ class RatesTestCase(CommandBaseTestCase):
             self.assertIn(str(assessment.mark), field['value'])
         self.assertIn(assessments[1].partial, embed_fields[1]['value'])
 
-    async def test__rates__no_media(self):
-        await commands.rates.callback(self.interaction)
+    async def test__assessment_cog__rates__no_media(self):
+        await self.cog.rates.callback(self.cog, self.interaction)
 
         self.assert_thinking_placeholder(self.interaction)
         expected_message = 'I searched everywhere. Not a single story survived.'
         self.interaction.edit_original_response.assert_called_once_with(content=expected_message)
 
-
-class MyRatesTestCase(CommandBaseTestCase):
-    async def test__my_rates(self):
+    async def test__assessment_cog__my_rates(self):
         current_time = timezone.now()
         media = await sync_to_async(MediaFactory.create_batch)(size=2)
         assessments = await sync_to_async(AssessmentFactory.create_batch)(
@@ -65,7 +65,7 @@ class MyRatesTestCase(CommandBaseTestCase):
             user=self.user,
         )
 
-        await commands.my_rates.callback(self.interaction)
+        await self.cog.my_rates.callback(self.cog, self.interaction)
 
         self.assert_thinking_placeholder(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
@@ -87,16 +87,14 @@ class MyRatesTestCase(CommandBaseTestCase):
             self.assertIn(assessment.media.url, field['value'])
         self.assertIn(assessments[1].partial, embed_fields[1]['value'])
 
-    async def test__my_rates__no_assessments(self):
-        await commands.my_rates.callback(self.interaction)
+    async def test__assessment_cog__my_rates__no_assessments(self):
+        await self.cog.my_rates.callback(self.cog, self.interaction)
 
         self.assert_thinking_placeholder(self.interaction)
         expected_message = 'Only cold ash remains. You have judged nothing... or perhaps I have already forgotten.'
         self.interaction.edit_original_response.assert_called_once_with(content=expected_message)
 
-
-class RateTestCase(CommandBaseTestCase):
-    async def test__rate(self):
+    async def test__assessment_cog__rate(self):
         media = await sync_to_async(MediaFactory.create_batch)(
             size=3,
             assessment_status=Media.AssessmentStatus.IN_PROGRESS,
@@ -105,7 +103,7 @@ class RateTestCase(CommandBaseTestCase):
         await sync_to_async(AssessmentFactory.create)(media=media[-1], user=self.user)
         selected_media = media[:-1]
 
-        await commands.rate.callback(self.interaction)
+        await self.cog.rate.callback(self.cog, self.interaction)
 
         self.assert_thinking_placeholder(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
@@ -125,11 +123,11 @@ class RateTestCase(CommandBaseTestCase):
             self.assertEqual(option.value, str(media_obj.id))
             self.assertEqual(option.description, media_obj.category.name)
 
-    async def test__rate__no_media(self):
+    async def test__assessment_cog__rate__no_media(self):
         self.interaction.user.id = 100
         self.interaction.user.name = 'Discord user'
 
-        await commands.rate.callback(self.interaction)
+        await self.cog.rate.callback(self.cog, self.interaction)
 
         user = await User.objects.filter(external_id=self.interaction.user.id).afirst()
         self.assertIsNotNone(user)

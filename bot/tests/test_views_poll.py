@@ -7,11 +7,11 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from api.assessment.tests.factories import MediaFactory, PollFactory, VoteFactory
 from api.user.tests.factories import UserFactory
-from bot.tests.base import AssertThinkingPlaceholderMixin
+from bot.tests.base import CogBaseTestCase
 from bot.views.poll import PollSelect, PollView
 
 
-class PollViewTestCase(AssertThinkingPlaceholderMixin, TestCase):
+class PollViewTestCase(CogBaseTestCase):
     view_class = PollView
 
     @classmethod

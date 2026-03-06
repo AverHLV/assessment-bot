@@ -7,23 +7,24 @@ from unittest.mock import Mock, patch
 
 from api.assessment.tests.factories import AssessmentFactory
 from bot import messages
-from bot.bot import bot
 from bot.tests.base import (
-    CommandBaseTestCase,
+    CogWithCommandsBaseTestCase,
     LLMClientTestMixin,
     get_async_context_manager_mock,
     get_async_iterator_mock,
 )
 
 
-class MessagesTestCase(LLMClientTestMixin, CommandBaseTestCase):
+class MessageCogTestCase(LLMClientTestMixin, CogWithCommandsBaseTestCase):
+    cog_class = messages.MessageCog
+
     def setUp(self):
         super().setUp()
 
         self.message = self.interaction
         self.message.author.id = self.user.external_id
         self.message.author.bot = False
-        self.message.mentions = [bot.user]
+        self.message.mentions = [self.bot.user]
         self.message.content = 'message content'
 
         self.message_history = []
@@ -42,14 +43,14 @@ class MessagesTestCase(LLMClientTestMixin, CommandBaseTestCase):
 
     @patch('bot.messages.openrouter_client.create_completion')
     @async_to_sync
-    async def test__on_message(self, completion_mock):
+    async def test__message_cog__on_message(self, completion_mock):
         self.message.channel.typing = get_async_context_manager_mock()
         self.message.channel.history = get_async_iterator_mock(self.message_history)
         completion_mock.return_value = self.response_data
 
         assessment, _ = await sync_to_async(AssessmentFactory.create_batch)(size=2, user=self.user)
 
-        await messages.on_message(self.message)
+        await self.cog.on_message(self.message)
 
         prompt = self.assert_llm_completion_mock(completion_mock)
         self.assertIn(str(assessment.mark), prompt)
@@ -66,7 +67,7 @@ class MessagesTestCase(LLMClientTestMixin, CommandBaseTestCase):
         self.message.channel.history.assert_called_once_with(limit=5, before=self.message)
         self.message.reply.assert_called_once_with(self.response_content)
 
-    async def test__on_message__not_mentioned(self):
+    async def test__message_cog__on_message__not_mentioned(self):
         self.message.mentions = []
-        await messages.on_message(self.message)
+        await self.cog.on_message(self.message)
         self.message.channel.typing.assert_not_called()

@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase
 
 from asgiref.sync import sync_to_async
 
@@ -8,13 +7,13 @@ from unittest.mock import AsyncMock
 from api.assessment.models import Media, MediaCategory
 from api.assessment.tests.factories import MediaFactory
 from api.user.tests.factories import UserFactory
-from bot.tests.base import AssertThinkingPlaceholderMixin
+from bot.tests.base import CogBaseTestCase
 from bot.views.media import MediaModal
 
 User = get_user_model()
 
 
-class MediaModalTestCase(AssertThinkingPlaceholderMixin, TestCase):
+class MediaModalTestCase(CogBaseTestCase):
     modal_class = MediaModal
 
     @classmethod

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock
 from api.assessment.models import Assessment
 from api.llm.clients import AsyncOpenRouterClient
 from api.user.tests.factories import UserFactory
+from bot.cog import BaseCog
 
 
 class AsyncTestContextManager:
@@ -26,16 +27,6 @@ def get_async_iterator_mock(values: list) -> Mock:
     content_mock.__aiter__ = Mock(return_value=content_mock)
     content_mock.__anext__.side_effect = *values, StopAsyncIteration
     return Mock(return_value=content_mock)
-
-
-class AssertThinkingPlaceholderMixin:
-    @staticmethod
-    def assert_thinking_placeholder(interaction: AsyncMock, edit: bool = False) -> None:
-        expected_message = "Please wait... I'm gently sifting through fading memories."
-        if edit:
-            interaction.response.edit_message.assert_called_once_with(content=expected_message, embed=None, view=None)
-        else:
-            interaction.response.send_message.assert_called_once_with(expected_message, ephemeral=True)
 
 
 class LLMClientTestMixin:
@@ -64,17 +55,32 @@ class LLMClientTestMixin:
         return prompt
 
 
-class CommandBaseTestCase(AssertThinkingPlaceholderMixin, TestCase):
+class CogBaseTestCase(TestCase):
+    @staticmethod
+    def assert_thinking_placeholder(interaction: AsyncMock, edit: bool = False) -> None:
+        expected_message = "Please wait... I'm gently sifting through fading memories."
+        if edit:
+            interaction.response.edit_message.assert_called_once_with(content=expected_message, embed=None, view=None)
+        else:
+            interaction.response.send_message.assert_called_once_with(expected_message, ephemeral=True)
+
+
+class CogWithCommandsBaseTestCase(CogBaseTestCase):
+    cog_class: type[BaseCog]
+
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory()
 
     def setUp(self):
+        self.bot = AsyncMock()
+        self.cog = self.cog_class(self.bot)
+
         self.interaction = AsyncMock()
         self.interaction.user.id = self.user.external_id
 
 
-class PaginatorBaseTestCase(AssertThinkingPlaceholderMixin, TestCase):
+class PaginatorBaseTestCase(CogBaseTestCase):
     paginator_class: type
     queryset: QuerySet = Assessment.objects.none()
 

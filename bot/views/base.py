@@ -6,8 +6,8 @@ import discord
 import math
 from abc import ABCMeta, abstractmethod
 
+from bot.cog import BaseCog
 from bot.modals import BaseFilterModal
-from bot.utils import show_thinking_placeholder
 
 
 class BaseEmbed(discord.ui.View, metaclass=ABCMeta):
@@ -62,7 +62,7 @@ class BasePaginator(BaseEmbed, metaclass=ABCMeta):
             await interaction.response.defer()
             return
 
-        await show_thinking_placeholder(interaction, edit=True)
+        await BaseCog.show_thinking_placeholder(interaction, edit=True)
         self.page -= 1
         await self.refresh(interaction)
 
@@ -72,7 +72,7 @@ class BasePaginator(BaseEmbed, metaclass=ABCMeta):
             await interaction.response.defer()
             return
 
-        await show_thinking_placeholder(interaction, edit=True)
+        await BaseCog.show_thinking_placeholder(interaction, edit=True)
         self.page += 1
         await self.refresh(interaction)
 
@@ -107,6 +107,6 @@ class BaseFilterPaginator(BasePaginator, metaclass=ABCMeta):
 
     @discord.ui.button(label='Clear', style=discord.ButtonStyle.secondary)
     async def clear(self, interaction: discord.Interaction, _button: discord.Button) -> None:
-        await show_thinking_placeholder(interaction, edit=True)
+        await BaseCog.show_thinking_placeholder(interaction, edit=True)
         await self.clear_items_queryset()
         await self.refresh(interaction)
