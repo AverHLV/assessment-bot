@@ -5,7 +5,7 @@ from asgiref.sync import async_to_sync
 
 from unittest.mock import AsyncMock, patch
 
-from bot.bot import AssessmentBot, get_assessment_bot, on_command_error
+from bot.bot import AssessmentBot, get_assessment_bot
 
 
 class AssessmentBotTestCase(SimpleTestCase):
@@ -35,20 +35,22 @@ class AssessmentBotTestCase(SimpleTestCase):
 
         self.interaction.reply.assert_called_once_with(bot.error_message)
 
-    async def test__assessment_bot__on_command_error(self):
+    async def test__assessment_bot__on_app_command_error(self):
         bot = await self.get_bot()
-        await on_command_error(self.interaction, self.error)
+
+        await bot.on_app_command_error(self.interaction, self.error)
+
         self.interaction.edit_original_response.assert_called_once_with(
             content=bot.error_message,
             embed=None,
             view=None,
         )
 
-    async def test__assessment_bot__on_command_error__cooldown(self):
+    async def test__assessment_bot__on_app_command_error__cooldown(self):
         bot = await self.get_bot()
         self.error = discord.app_commands.CommandOnCooldown(cooldown=AsyncMock(), retry_after=5)
 
-        await on_command_error(self.interaction, self.error)
+        await bot.on_app_command_error(self.interaction, self.error)
 
         expected_message = bot.error_cooldown_message.format(retry=self.error.retry_after)
-        self.interaction.response.send_message.assert_called_once_with(expected_message, ephemeral=True)
+        self.interaction.response.send_message.assert_called_once_with(content=expected_message, ephemeral=True)
