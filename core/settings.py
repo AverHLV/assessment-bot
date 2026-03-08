@@ -136,6 +136,8 @@ OPENROUTER_URL = env('APP_OPENROUTER_URL', default='https://openrouter')
 OPENROUTER_API_KEY = env('APP_OPENROUTER_API_KEY', default='key')
 OPENROUTER_MODEL = env('APP_OPENROUTER_MODEL', default='model')
 
+EXTERNAL_URL = env('APP_EXTERNAL_URL', default='https://external_url').rstrip('/')
+
 
 # Logging
 
