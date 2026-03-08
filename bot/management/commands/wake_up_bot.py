@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand
 import httpx
 
 import logging
+from contextlib import suppress
 
 logger = logging.getLogger(__name__)
 
@@ -15,5 +16,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         logger.info('Performing wake-up request...')
-        httpx.get(f'{settings.EXTERNAL_URL}/liveness/', timeout=10)
+        with suppress(httpx.HTTPError):
+            httpx.get(f'{settings.EXTERNAL_URL}/liveness/', timeout=10)
         logger.info('Wake-up request performed successfully')
