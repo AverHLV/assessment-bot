@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock
 from api.assessment.models import Assessment
 from api.user.tests.factories import UserFactory
 from bot.cog import BaseCog
+from bot.views.base import BasePaginator
 
 
 class AsyncTestContextManager:
@@ -29,38 +30,42 @@ def get_async_iterator_mock(values: list) -> Mock:
 
 
 class CogBaseTestCase(TestCase):
-    @staticmethod
-    def assert_thinking_placeholder(interaction: AsyncMock, edit: bool = False) -> None:
-        expected_message = "Please wait... I'm gently sifting through fading memories."
+    cog_class: type[BaseCog] = BaseCog
+
+    def setUp(self):
+        self.interaction = AsyncMock()
+        self.bot = AsyncMock()
+        self.cog = self.cog_class(self.bot)
+
+    def assert_thinking_placeholder(self, interaction: AsyncMock, edit: bool = False) -> None:
         if edit:
-            interaction.response.edit_message.assert_called_once_with(content=expected_message, embed=None, view=None)
+            interaction.response.edit_message.assert_called_once_with(
+                content=self.cog.message_thinking_placeholder,
+                embed=None,
+                view=None,
+            )
         else:
-            interaction.response.send_message.assert_called_once_with(expected_message, ephemeral=True)
+            interaction.response.send_message.assert_called_once_with(
+                content=self.cog.message_thinking_placeholder,
+                ephemeral=True,
+            )
 
 
 class CogWithCommandsBaseTestCase(CogBaseTestCase):
-    cog_class: type[BaseCog]
-
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory()
 
     def setUp(self):
-        self.bot = AsyncMock()
-        self.cog = self.cog_class(self.bot)
-
-        self.interaction = AsyncMock()
+        super().setUp()
         self.interaction.user.id = self.user.external_id
 
 
 class PaginatorBaseTestCase(CogBaseTestCase):
-    paginator_class: type
+    paginator_class: type[BasePaginator]
     queryset: QuerySet = Assessment.objects.none()
 
-    def setUp(self):
-        self.interaction = AsyncMock()
-
-    def get_paginator(self):
+    def get_paginator(self) -> BasePaginator:
         paginator = self.paginator_class(items_queryset=self.queryset.all(), item_count=0)
         paginator.get_embed = AsyncMock()
         return paginator

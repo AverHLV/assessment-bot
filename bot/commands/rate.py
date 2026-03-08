@@ -10,14 +10,22 @@ from bot.cog import BaseCog
 
 
 class AssessmentCog(BaseCog):
+    message_rates = 'Stories, scorched by opinions. I kept them for you.'
+    message_rates_no_assessments = 'I searched everywhere. Not a single story survived.'
+    message_my_rates = 'These are your past verdicts. Heavy, warm, and a little embarrassing, but precious.'
+    message_my_rates_no_assessments = (
+        'Only cold ash remains. You have judged nothing... or perhaps I have already forgotten.'
+    )
+    message_rate = 'Choose a story from the ashes...'
+    message_rate_no_media = 'The ashes are silent... There is nothing left for you to judge.'
+
     @command(description='Witness how this world was judged by many hands.')
     async def rates(self, interaction: discord.Interaction) -> None:
         await self.show_thinking_placeholder(interaction)
         media_queryset = Media.objects.completed()
         media_count = await media_queryset.acount()
         if not media_count:
-            msg = 'I searched everywhere. Not a single story survived.'
-            await interaction.edit_original_response(content=msg)
+            await interaction.edit_original_response(content=self.message_rates_no_assessments)
             return
 
         assessments_only_fields = 'mark', 'partial', 'user_id', 'user__username'
@@ -32,10 +40,9 @@ class AssessmentCog(BaseCog):
             .order_by('-create_dt')
         )
 
-        msg = 'Stories, scorched by opinions. I kept them for you.'
         view = views.AssessmentPaginator(items_queryset=media_queryset, item_count=media_count)
         embed = await view.get_embed()
-        await interaction.edit_original_response(content=msg, embed=embed, view=view)
+        await interaction.edit_original_response(content=self.message_rates, embed=embed, view=view)
 
     @command(description='The echoes of your past judgments rise again.')
     async def my_rates(self, interaction: discord.Interaction) -> None:
@@ -44,8 +51,7 @@ class AssessmentCog(BaseCog):
         assessment_queryset = user.assessments.all()
         assessment_count = await assessment_queryset.acount()
         if not assessment_count:
-            msg = 'Only cold ash remains. You have judged nothing... or perhaps I have already forgotten.'
-            await interaction.edit_original_response(content=msg)
+            await interaction.edit_original_response(content=self.message_my_rates_no_assessments)
             return
 
         only_fields = (
@@ -62,10 +68,9 @@ class AssessmentCog(BaseCog):
             assessment_queryset.select_related('media', 'media__category').only(*only_fields).order_by('-create_dt')
         )
 
-        msg = 'These are your past verdicts. Heavy, warm, and a little embarrassing, but precious.'
         view = views.MyAssessmentPaginator(items_queryset=assessment_queryset, item_count=assessment_count)
         embed = await view.get_embed()
-        await interaction.edit_original_response(content=msg, embed=embed, view=view)
+        await interaction.edit_original_response(content=self.message_my_rates, embed=embed, view=view)
 
     @command(description='Another judgment calls...')
     async def rate(self, interaction: discord.Interaction) -> None:
@@ -78,10 +83,8 @@ class AssessmentCog(BaseCog):
         )
         media = [media_obj async for media_obj in media]
         if not media:
-            msg = 'The ashes are silent... There is nothing left for you to judge.'
-            await interaction.edit_original_response(content=msg)
+            await interaction.edit_original_response(content=self.message_rate_no_media)
             return
 
-        msg = 'Choose a story from the ashes...'
         view = views.MediaSelectToAssessView(user=user, media=media)
-        await interaction.edit_original_response(content=msg, view=view)
+        await interaction.edit_original_response(content=self.message_rate, view=view)

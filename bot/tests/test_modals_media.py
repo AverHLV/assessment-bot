@@ -2,8 +2,6 @@ from django.contrib.auth import get_user_model
 
 from asgiref.sync import sync_to_async
 
-from unittest.mock import AsyncMock
-
 from api.assessment.models import Media, MediaCategory
 from api.assessment.tests.factories import MediaFactory
 from api.user.tests.factories import UserFactory
@@ -27,7 +25,6 @@ class MediaModalTestCase(CogBaseTestCase):
         self.name = 'media name'
         self.url = 'https://media.com/media/'
         self.description = 'media description'
-        self.interaction = AsyncMock()
 
     def assert_media_instance(
         self,

@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from asgiref.sync import async_to_sync
 
 from decimal import Decimal
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from api.assessment.models import Assessment, Media
 from api.assessment.tests.factories import MediaFactory
@@ -28,7 +28,6 @@ class AssessmentModalTestCase(CogBaseTestCase):
         self.mark = '5.5'
         self.partial = '1 / 5 episodes'
         self.completion_response = 'response content'
-        self.interaction = AsyncMock()
 
     def assert_assessment_instance(
         self,
@@ -64,8 +63,7 @@ class AssessmentModalTestCase(CogBaseTestCase):
         self.assertIn(self.media.name, prompt)
         self.assertIn(self.media.description, prompt)
         self.assertIn(self.media.category.name, prompt)
-        expected_default_message = 'Saved. Your judgment already echoes through my rusted core.'
-        self.assertEqual(kwargs['default_message'], expected_default_message)
+        self.assertEqual(kwargs['default_message'], modal.llm_client_default_message)
 
         self.interaction.edit_original_response.assert_called_once_with(
             content=completion_mock.return_value,

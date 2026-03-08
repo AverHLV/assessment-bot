@@ -38,8 +38,7 @@ class PollCogTestCase(CogWithCommandsBaseTestCase):
         self.assert_thinking_placeholder(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
         _, kwargs = self.interaction.edit_original_response.call_args
-        expected_message = 'These are the trials prepared for the future. Choose one, and cast your fragile vote.'
-        self.assertEqual(kwargs['content'], expected_message)
+        self.assertEqual(kwargs['content'], self.cog.message_poll)
 
         view_elements = kwargs['view']._children
         self.assertEqual(len(view_elements), 1)
@@ -58,8 +57,7 @@ class PollCogTestCase(CogWithCommandsBaseTestCase):
         await self.cog.vote.callback(self.cog, self.interaction)
 
         self.assert_thinking_placeholder(self.interaction)
-        expected_message = 'Silence. There is no future to cast.'
-        self.interaction.edit_original_response.assert_called_once_with(content=expected_message)
+        self.interaction.edit_original_response.assert_called_once_with(content=self.cog.message_poll_no_polls)
 
     async def test__poll_cog__vote__already_voted(self):
         await sync_to_async(VoteFactory.create)(poll=self.poll, voter=self.user, ranks=[1])

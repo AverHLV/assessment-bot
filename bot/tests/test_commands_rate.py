@@ -31,8 +31,7 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
         self.assert_thinking_placeholder(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
         _, kwargs = self.interaction.edit_original_response.call_args
-        expected_message = 'Stories, scorched by opinions. I kept them for you.'
-        self.assertEqual(kwargs['content'], expected_message)
+        self.assertEqual(kwargs['content'], self.cog.message_rates)
         self.assertIsNotNone(kwargs['view'])
 
         embed = kwargs['embed']
@@ -51,8 +50,7 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
         await self.cog.rates.callback(self.cog, self.interaction)
 
         self.assert_thinking_placeholder(self.interaction)
-        expected_message = 'I searched everywhere. Not a single story survived.'
-        self.interaction.edit_original_response.assert_called_once_with(content=expected_message)
+        self.interaction.edit_original_response.assert_called_once_with(content=self.cog.message_rates_no_assessments)
 
     async def test__assessment_cog__my_rates(self):
         current_time = timezone.now()
@@ -70,8 +68,7 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
         self.assert_thinking_placeholder(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
         _, kwargs = self.interaction.edit_original_response.call_args
-        expected_message = 'These are your past verdicts. Heavy, warm, and a little embarrassing, but precious.'
-        self.assertEqual(kwargs['content'], expected_message)
+        self.assertEqual(kwargs['content'], self.cog.message_my_rates)
         self.assertIsNotNone(kwargs['view'])
 
         embed = kwargs['embed']
@@ -91,8 +88,9 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
         await self.cog.my_rates.callback(self.cog, self.interaction)
 
         self.assert_thinking_placeholder(self.interaction)
-        expected_message = 'Only cold ash remains. You have judged nothing... or perhaps I have already forgotten.'
-        self.interaction.edit_original_response.assert_called_once_with(content=expected_message)
+        self.interaction.edit_original_response.assert_called_once_with(
+            content=self.cog.message_my_rates_no_assessments,
+        )
 
     async def test__assessment_cog__rate(self):
         media = await sync_to_async(MediaFactory.create_batch)(
@@ -108,8 +106,7 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
         self.assert_thinking_placeholder(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
         _, kwargs = self.interaction.edit_original_response.call_args
-        expected_message = 'Choose a story from the ashes...'
-        self.assertEqual(kwargs['content'], expected_message)
+        self.assertEqual(kwargs['content'], self.cog.message_rate)
 
         view_elements = kwargs['view']._children
         self.assertEqual(len(view_elements), 1)
@@ -134,5 +131,4 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
         self.assertEqual(user.username, self.interaction.user.name)
 
         self.assert_thinking_placeholder(self.interaction)
-        expected_message = 'The ashes are silent... There is nothing left for you to judge.'
-        self.interaction.edit_original_response.assert_called_once_with(content=expected_message)
+        self.interaction.edit_original_response.assert_called_once_with(content=self.cog.message_rate_no_media)

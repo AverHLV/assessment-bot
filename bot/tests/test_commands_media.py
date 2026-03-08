@@ -27,8 +27,7 @@ class MediaCogTestCase(CogWithCommandsBaseTestCase):
         self.assert_thinking_placeholder(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
         _, kwargs = self.interaction.edit_original_response.call_args
-        expected_message = 'A list of stories awaiting their time to be judged - not today.'
-        self.assertEqual(kwargs['content'], expected_message)
+        self.assertEqual(kwargs['content'], self.cog.message_future_media)
         self.assertIsNotNone(kwargs['view'])
 
         embed = kwargs['embed']
@@ -47,8 +46,7 @@ class MediaCogTestCase(CogWithCommandsBaseTestCase):
         await self.cog.future_media.callback(self.cog, self.interaction)
 
         self.assert_thinking_placeholder(self.interaction)
-        expected_message = 'Nothing remains reserved for later. Even tomorrow feels empty.'
-        self.interaction.edit_original_response.assert_called_once_with(content=expected_message)
+        self.interaction.edit_original_response.assert_called_once_with(content=self.cog.message_future_media_no_media)
 
     async def test__media_cog__add_future_media(self):
         media_categories = MediaCategory.objects.order_by('name')
@@ -59,8 +57,7 @@ class MediaCogTestCase(CogWithCommandsBaseTestCase):
         self.assert_thinking_placeholder(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
         _, kwargs = self.interaction.edit_original_response.call_args
-        expected_message = 'Every story needs a home before its trial. Choose one.'
-        self.assertEqual(kwargs['content'], expected_message)
+        self.assertEqual(kwargs['content'], self.cog.message_add_future_media)
 
         view_elements = kwargs['view']._children
         self.assertEqual(len(view_elements), 1)

@@ -49,6 +49,9 @@ class PollView(BaseEmbed):
     select_class = CandidateSelect
     swap_button_class = CandidateSwapButton
 
+    message_vote_saved = "Saved! I'll protect your vote, promise."
+    message_poll_resolved = "🎉 Ta-da! The poll '{poll_name}' is over! 🎉"
+
     def __init__(self, *args, user: User, poll: Poll, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -118,14 +121,15 @@ class PollView(BaseEmbed):
     async def confirm(self, interaction: discord.Interaction, _button: discord.Button) -> None:
         await BaseCog.show_thinking_placeholder(interaction, edit=True)
         await self.poll.save_vote(self.user, self.candidates)
-        msg = "Saved! I'll protect your vote, promise."
-        await interaction.edit_original_response(content=msg, embed=None, view=None)
+        await interaction.edit_original_response(content=self.message_vote_saved, embed=None, view=None)
 
         result = await sync_to_async(self.check_resolve)()
-        if result:
-            msg = f"🎉 Ta-da! The poll '{self.poll.name}' is over! 🎉"
-            embed = await self.get_result_embed(result)
-            await interaction.followup.send(content=msg, embed=embed)
+        if not result:
+            return
+
+        message = self.message_poll_resolved.format(poll_name=self.poll.name)
+        embed = await self.get_result_embed(result)
+        await interaction.followup.send(content=message, embed=embed)
 
 
 class PollSelect(discord.ui.Select):

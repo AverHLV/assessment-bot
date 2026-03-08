@@ -21,7 +21,7 @@ class PollViewTestCase(CogBaseTestCase):
         cls.poll = PollFactory(candidates=cls.candidates)
 
     def setUp(self):
-        self.interaction = AsyncMock()
+        super().setUp()
         # prevent an async operation on view init
         models.prefetch_related_objects([self.poll], 'candidates')
 
@@ -129,9 +129,12 @@ class PollViewTestCase(CogBaseTestCase):
         self.assertListEqual(vote.ranks, expected_ranks)
 
         self.assert_thinking_placeholder(self.interaction, edit=True)
-        expected_message = "Saved! I'll protect your vote, promise."
-        self.interaction.edit_original_response.assert_called_once_with(content=expected_message, embed=None, view=None)
-        expected_message = f"🎉 Ta-da! The poll '{self.poll.name}' is over! 🎉"
+        self.interaction.edit_original_response.assert_called_once_with(
+            content=view.message_vote_saved,
+            embed=None,
+            view=None,
+        )
+        expected_message = view.message_poll_resolved.format(poll_name=self.poll.name)
         self.interaction.followup.send.assert_called_once_with(
             content=expected_message,
             embed=view.get_result_embed.return_value,

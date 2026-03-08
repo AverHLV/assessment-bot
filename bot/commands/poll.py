@@ -9,6 +9,9 @@ from bot.cog import BaseCog
 
 
 class PollCog(BaseCog):
+    message_poll = 'These are the trials prepared for the future. Choose one, and cast your fragile vote.'
+    message_poll_no_polls = 'Silence. There is no future to cast.'
+
     @command(description='Step into a poll and whisper your judgment of what is yet to come.')
     async def vote(self, interaction: discord.Interaction) -> None:
         await self.show_thinking_placeholder(interaction)
@@ -34,10 +37,8 @@ class PollCog(BaseCog):
         )
         polls = [poll async for poll in polls]
         if not polls:
-            msg = 'Silence. There is no future to cast.'
-            await interaction.edit_original_response(content=msg)
+            await interaction.edit_original_response(content=self.message_poll_no_polls)
             return
 
-        msg = 'These are the trials prepared for the future. Choose one, and cast your fragile vote.'
         view = views.PollSelectView(user=user, polls=polls)
-        await interaction.edit_original_response(content=msg, view=view)
+        await interaction.edit_original_response(content=self.message_poll, view=view)

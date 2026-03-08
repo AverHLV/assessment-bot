@@ -5,6 +5,6 @@ from api.user import managers
 
 
 class User(AbstractUser):
-    external_id = models.BigIntegerField(unique=True, db_index=True)
+    external_id = models.BigIntegerField(unique=True)
 
     objects = managers.UserManager()

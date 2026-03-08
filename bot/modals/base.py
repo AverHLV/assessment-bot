@@ -52,8 +52,8 @@ class BaseCreateModal(discord.ui.Modal):
 
         form = self.get_form()
         if await sync_to_async(form.is_valid)():
-            msg = await self.form_valid(form)
+            message = await self.form_valid(form)
         else:
-            msg = await self.form_invalid(form)
+            message = await self.form_invalid(form)
 
-        await interaction.edit_original_response(content=msg, embed=None, view=None)
+        await interaction.edit_original_response(content=message, embed=None, view=None)

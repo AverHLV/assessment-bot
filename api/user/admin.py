@@ -16,5 +16,7 @@ class UserAdmin(BaseUserAdmin):
             },
         ),
     )
+    fieldsets[0][1]['fields'] += ('id',)
     add_fieldsets = BaseUserAdmin.add_fieldsets
     add_fieldsets[0][1]['fields'] = 'username', 'external_id', 'password1', 'password2'
+    readonly_fields = BaseUserAdmin.readonly_fields + ('id', 'external_id')
