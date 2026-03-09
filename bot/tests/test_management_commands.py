@@ -44,10 +44,3 @@ class StartBotTestCase(TestCase):
         with patch.object(self.command, 'handle_async', new_callable=AsyncMock) as mock:
             call_command('start_bot')
         mock.assert_called_once()
-
-
-class WakeUpBotTestCase(TestCase):
-    @patch('bot.management.commands.wake_up_bot.httpx.get')
-    def test__wake_up_bot(self, request_mock):
-        call_command('wake_up_bot')
-        request_mock.assert_called_once_with(f'{settings.EXTERNAL_URL}/liveness/', timeout=10)
