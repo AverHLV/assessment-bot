@@ -13,7 +13,10 @@ ENV PYTHONFAULTHANDLER=1 \
     LC_ALL=C.UTF-8 \
     LANG=C.UTF-8
 
-RUN apt-get update && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+    && apt-get install -y curl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 ARG USER_NAME=app-data
 ARG USER_ID=1000
