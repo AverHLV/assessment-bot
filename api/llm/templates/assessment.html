@@ -2,7 +2,7 @@
 
 {% block parameters %}
     4. Partner's new assessment.
-    In format: mark (from 1 to 10 in half steps), partial or full (indicates that the media has been partially reviewed
+    In format: mark (from 0 to 10 in half steps), partial or full (indicates that the media has been partially reviewed
     if value is not 'full'), media name, media description (may contain artistic hints you can use), media category.
     {{ assessment.mark }}, {{ assessment.partial|default:'full' }}, {{ assessment.media.name }},
     "{{ assessment.media.description|default:'no description' }}", {{ assessment.media.category.name }}

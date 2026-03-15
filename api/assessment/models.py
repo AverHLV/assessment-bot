@@ -64,11 +64,11 @@ class Assessment(models.Model):
         max_digits=3,
         decimal_places=1,
         validators=[
-            validators.MinValueValidator(Decimal('1')),
+            validators.MinValueValidator(Decimal('0')),
             validators.MaxValueValidator(Decimal('10')),
             validate_half_step,
         ],
-        help_text='Your mark, from 1 to 10 in half steps.',
+        help_text='Your mark, from 0 to 10 in half steps.',
     )
     partial = models.CharField(
         max_length=300,

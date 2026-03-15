@@ -44,7 +44,7 @@ class MediaAdmin(admin.ModelAdmin):
     list_filter = 'assessment_status', 'category', 'creator'
     search_fields = ('name',)
     readonly_fields = 'id', 'create_dt', 'update_dt'
-    ordering = '-update_dt', '-create_dt'
+    ordering = ('-create_dt',)
     actions = start_assessment_for_1_week, finish_assessment
 
     def display_creator(self, obj: models.Media) -> str:

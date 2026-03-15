@@ -20,7 +20,7 @@ class MediaFactory(factory.django.DjangoModelFactory):
 
 
 class AssessmentFactory(factory.django.DjangoModelFactory):
-    mark = factory.fuzzy.FuzzyDecimal(low=1, high=10, precision=0)
+    mark = factory.fuzzy.FuzzyDecimal(low=0, high=10, precision=0)
     media = factory.SubFactory(MediaFactory)
     user = factory.SubFactory(UserFactory)
 
