@@ -41,8 +41,7 @@ class AssessmentCog(BaseCog):
         )
 
         view = views.AssessmentPaginator(items_queryset=media_queryset, item_count=media_count)
-        embed = await view.get_embed()
-        await interaction.edit_original_response(content=self.message_rates, embed=embed, view=view)
+        await view.refresh(interaction, content=self.message_rates)
 
     @command(description='The echoes of your past judgments rise again.')
     async def my_rates(self, interaction: discord.Interaction) -> None:
@@ -69,8 +68,7 @@ class AssessmentCog(BaseCog):
         )
 
         view = views.MyAssessmentPaginator(items_queryset=assessment_queryset, item_count=assessment_count)
-        embed = await view.get_embed()
-        await interaction.edit_original_response(content=self.message_my_rates, embed=embed, view=view)
+        await view.refresh(interaction, content=self.message_my_rates)
 
     @command(description='Another judgment calls...')
     async def rate(self, interaction: discord.Interaction) -> None:

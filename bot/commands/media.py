@@ -24,8 +24,7 @@ class MediaCog(BaseCog):
         media_queryset = media_queryset.select_related('category', 'creator').only(*only_fields).order_by('-create_dt')
 
         view = views.FutureMediaPaginator(items_queryset=media_queryset, item_count=media_count)
-        embed = await view.get_embed()
-        await interaction.edit_original_response(content=self.message_future_media, embed=embed, view=view)
+        await view.refresh(interaction, content=self.message_future_media)
 
     @command(description='Add a story that will one day face judgment.')
     @checks.cooldown(rate=5, per=60, key=lambda interaction: interaction.user.id)

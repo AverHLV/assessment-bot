@@ -9,8 +9,9 @@ python_version = "3.13"
 [packages]
 django = "==5.2.11"
 django-environ = "==0.12.1"
-discord.py = "==2.6.4"
+"discord.py" = "==2.6.4"
 pyrankvote = "==2.0.6"
+numpy = "==2.4.3"
 sentry-sdk = "==2.52.0"
 psycopg = {extras = ["binary"], version = "==3.3.2"}
 httpx = "==0.28.1"

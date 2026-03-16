@@ -40,15 +40,14 @@ class PollCogTestCase(CogWithCommandsBaseTestCase):
         _, kwargs = self.interaction.edit_original_response.call_args
         self.assertEqual(kwargs['content'], self.cog.message_poll)
 
-        view_elements = kwargs['view']._children
+        view_elements = kwargs['view'].children
         self.assertEqual(len(view_elements), 1)
         poll_select = view_elements[0]
         self.assertEqual(poll_select.user.id, self.user.id)
         expected_poll_mapping = {poll.id: poll for poll in polls}
         self.assertDictEqual(poll_select.poll_mapping, expected_poll_mapping)
-        options = poll_select._underlying.options
-        self.assertEqual(len(options), len(polls))
-        for n, option in enumerate(options):
+        self.assertEqual(len(poll_select.options), len(polls))
+        for n, option in enumerate(poll_select.options):
             poll = polls[n]
             self.assertEqual(option.label, poll.name)
             self.assertEqual(option.value, str(poll.id))
@@ -77,7 +76,7 @@ class PollCogTestCase(CogWithCommandsBaseTestCase):
         self.assert_thinking_placeholder(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
         _, kwargs = self.interaction.edit_original_response.call_args
-        poll_select = kwargs['view']._children[0]
+        poll_select = kwargs['view'].children[0]
         actual_poll = poll_select.poll_mapping[self.poll.id]
         actual_candidates = list(actual_poll.candidates.all())
         expected_candidates = [self.candidates[1]]

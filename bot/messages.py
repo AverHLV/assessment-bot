@@ -13,6 +13,8 @@ User = get_user_model()
 
 
 class MessageCog(BaseCog):
+    llm_client = openrouter_client
+
     async def get_user(self, interaction: discord.Message) -> User:
         return await User.objects.aget_or_create_by_discord(interaction.author)
 
@@ -45,6 +47,6 @@ class MessageCog(BaseCog):
                 'message_history': message_history,
             }
             prompt = render_to_string(template_name='message.html', context=context)
-            response = await run_create_completion(openrouter_client, prompt)
+            response = await run_create_completion(self.llm_client, prompt)
 
         await message.reply(response)

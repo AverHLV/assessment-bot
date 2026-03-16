@@ -34,17 +34,16 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
         self.assertEqual(kwargs['content'], self.cog.message_rates)
         self.assertIsNotNone(kwargs['view'])
 
-        embed = kwargs['embed']
-        embed_fields = embed._fields
+        embed_fields = kwargs['embed'].fields
         self.assertEqual(len(embed_fields), len(assessments))
         for n, field in enumerate(embed_fields):
             assessment = assessments[n]
-            self.assertFalse(field['inline'])
-            self.assertIn(assessment.media.name, field['name'])
-            self.assertIn(assessment.media.category.name, field['name'])
-            self.assertIn(assessment.user.username, field['value'])
-            self.assertIn(str(assessment.mark), field['value'])
-        self.assertIn(assessments[1].partial, embed_fields[1]['value'])
+            self.assertFalse(field.inline)
+            self.assertIn(assessment.media.name, field.name)
+            self.assertIn(assessment.media.category.name, field.name)
+            self.assertIn(assessment.user.username, field.value)
+            self.assertIn(str(assessment.mark), field.value)
+        self.assertIn(assessments[1].partial, embed_fields[1].value)
 
     async def test__assessment_cog__rates__no_media(self):
         await self.cog.rates.callback(self.cog, self.interaction)
@@ -72,17 +71,17 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
         self.assertIsNotNone(kwargs['view'])
 
         embed = kwargs['embed']
-        self.assertTrue(embed._footer)
-        embed_fields = embed._fields
+        self.assertTrue(embed.footer)
+        embed_fields = embed.fields
         self.assertEqual(len(embed_fields), len(assessments))
         for n, field in enumerate(embed_fields):
             assessment = assessments[n]
-            self.assertFalse(field['inline'])
-            self.assertIn(assessment.media.name, field['name'])
-            self.assertIn(str(assessment.mark), field['name'])
-            self.assertIn(assessment.media.category.name, field['value'])
-            self.assertIn(assessment.media.url, field['value'])
-        self.assertIn(assessments[1].partial, embed_fields[1]['value'])
+            self.assertFalse(field.inline)
+            self.assertIn(assessment.media.name, field.name)
+            self.assertIn(str(assessment.mark), field.name)
+            self.assertIn(assessment.media.category.name, field.value)
+            self.assertIn(assessment.media.url, field.value)
+        self.assertIn(assessments[1].partial, embed_fields[1].value)
 
     async def test__assessment_cog__my_rates__no_assessments(self):
         await self.cog.my_rates.callback(self.cog, self.interaction)
@@ -108,13 +107,12 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
         _, kwargs = self.interaction.edit_original_response.call_args
         self.assertEqual(kwargs['content'], self.cog.message_rate)
 
-        view_elements = kwargs['view']._children
+        view_elements = kwargs['view'].children
         self.assertEqual(len(view_elements), 1)
         media_select = view_elements[0]
         self.assertEqual(media_select.user.id, self.user.id)
-        options = media_select._underlying.options
-        self.assertEqual(len(options), len(selected_media))
-        for n, option in enumerate(options):
+        self.assertEqual(len(media_select.options), len(selected_media))
+        for n, option in enumerate(media_select.options):
             media_obj = selected_media[n]
             self.assertEqual(option.label, media_obj.name)
             self.assertEqual(option.value, str(media_obj.id))
