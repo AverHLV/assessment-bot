@@ -10,7 +10,7 @@ from bot.cog import BaseCog
 from bot.modals import BaseFilterModal
 
 
-class BaseEmbed(discord.ui.View, metaclass=ABCMeta):
+class BaseEmbedView(discord.ui.View, metaclass=ABCMeta):
     embed_item_value_max_length: int = 1024
 
     def strip_embed_item_value(self, value: str) -> str:
@@ -18,16 +18,16 @@ class BaseEmbed(discord.ui.View, metaclass=ABCMeta):
             value = f'{value[: self.embed_item_value_max_length - 3]}...'
         return value
 
-    async def refresh(self, interaction: discord.Interaction) -> None:
+    async def refresh(self, interaction: discord.Interaction, content: str | None = None) -> None:
         embed = await self.get_embed()
-        await interaction.edit_original_response(content=None, embed=embed, view=self)
+        await interaction.edit_original_response(content=content, embed=embed, view=self)
 
     @abstractmethod
     async def get_embed(self) -> discord.Embed:
         pass
 
 
-class BasePaginator(BaseEmbed, metaclass=ABCMeta):
+class BasePaginator(BaseEmbedView, metaclass=ABCMeta):
     def __init__(self, items_queryset: QuerySet, item_count: int, per_page: int = 10, **kwargs):
         if per_page > settings.BOT_PAGE_SIZE:
             raise ValueError(f'The given page size exceeds the Discord limit: {per_page}')

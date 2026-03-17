@@ -34,17 +34,17 @@ class PollViewTestCase(CogBaseTestCase):
 
         embed = await view.get_embed()
 
-        embed_fields = embed._fields
+        embed_fields = embed.fields
         self.assertEqual(len(embed_fields), len(self.candidates))
         for n, field in enumerate(embed_fields):
             candidate = self.candidates[n]
-            self.assertFalse(field['inline'])
-            self.assertIn(str(n + 1), field['name'])
-            self.assertIn(candidate.name, field['name'])
+            self.assertFalse(field.inline)
+            self.assertIn(str(n + 1), field.name)
+            self.assertIn(candidate.name, field.name)
             if n == view.selected_row:
-                self.assertIn('->', field['name'])
-            self.assertIn(candidate.url, field['value'])
-            self.assertIn(candidate.description, field['value'])
+                self.assertIn('->', field.name)
+            self.assertIn(candidate.url, field.value)
+            self.assertIn(candidate.description, field.value)
 
     async def test__poll_view__get_result_embed(self):
         result_mock, round_mock = Mock(), Mock()
@@ -55,14 +55,14 @@ class PollViewTestCase(CogBaseTestCase):
 
         embed = await view.get_result_embed(result_mock)
 
-        embed_fields = embed._fields
+        embed_fields = embed.fields
         self.assertEqual(len(embed_fields), len(round_mock.candidate_results))
         for n, field in enumerate(embed_fields):
             candidate, number_of_votes, status = round_mock.candidate_results[n]
-            self.assertFalse(field['inline'])
-            self.assertEqual(field['name'], candidate.name)
-            self.assertIn(str(number_of_votes), field['value'])
-            self.assertIn(election_status.lower(), field['value'])
+            self.assertFalse(field.inline)
+            self.assertEqual(field.name, candidate.name)
+            self.assertIn(str(number_of_votes), field.value)
+            self.assertIn(election_status.lower(), field.value)
 
     async def test__poll_view__select_candidate(self):
         view = self.get_view()
@@ -146,7 +146,7 @@ class PollViewTestCase(CogBaseTestCase):
     async def test__poll_view__swap_button__callback(self):
         view = self.get_view()
         view.swap_item = AsyncMock()
-        swap_button = view._children[2]
+        swap_button = view.children[2]
 
         await swap_button.callback(self.interaction)
 
@@ -157,9 +157,9 @@ class PollViewTestCase(CogBaseTestCase):
     async def test__poll_view__select__callback(self, values_mock):
         view = self.get_view()
         view.select_candidate = AsyncMock()
-        candidate_select = view._children[1]
+        candidate_select = view.children[1]
         selected_option_index = 0
-        selected_option = candidate_select._underlying.options[selected_option_index]
+        selected_option = candidate_select.options[selected_option_index]
         expected_candidate_id = candidate_select.candidate_mapping[selected_option_index]
 
         values_mock.get.return_value.get.return_value = [selected_option.value]
@@ -202,7 +202,7 @@ class PollSelectTestCase(TestCase):
         self.assertEqual(view.user, self.user)
         self.assertEqual(view.poll.id, self.poll.id)
         self.assertListEqual(view.candidates, self.candidates)
-        view_elements = view._children
+        view_elements = view.children
         self.assertEqual(len(view_elements), 4)
 
         candidate_select = view_elements[1]
@@ -210,7 +210,7 @@ class PollSelectTestCase(TestCase):
         sorted_candidates = sorted(self.candidates, key=lambda x: x.name)
         expected_candidate_mapping = {n: candidate.id for n, candidate in enumerate(sorted_candidates)}
         self.assertDictEqual(candidate_select.candidate_mapping, expected_candidate_mapping)
-        options = candidate_select._underlying.options
+        options = candidate_select.options
         self.assertEqual(len(options), len(sorted_candidates))
         for n, option in enumerate(options):
             self.assertEqual(option.label, sorted_candidates[n].name)

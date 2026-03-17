@@ -30,17 +30,16 @@ class MediaCogTestCase(CogWithCommandsBaseTestCase):
         self.assertEqual(kwargs['content'], self.cog.message_future_media)
         self.assertIsNotNone(kwargs['view'])
 
-        embed = kwargs['embed']
-        embed_fields = embed._fields
+        embed_fields = kwargs['embed'].fields
         self.assertEqual(len(embed_fields), len(media))
         for n, field in enumerate(embed_fields):
             media_obj = media[n]
-            self.assertFalse(field['inline'])
-            self.assertIn(media_obj.name, field['name'])
-            self.assertIn(media_obj.category.name, field['name'])
-            self.assertIn(media_obj.creator.username, field['value'])
-            self.assertIn(media_obj.url, field['value'])
-            self.assertIn(media_obj.description, field['value'])
+            self.assertFalse(field.inline)
+            self.assertIn(media_obj.name, field.name)
+            self.assertIn(media_obj.category.name, field.name)
+            self.assertIn(media_obj.creator.username, field.value)
+            self.assertIn(media_obj.url, field.value)
+            self.assertIn(media_obj.description, field.value)
 
     async def test__media_cog__future_media__no_media(self):
         await self.cog.future_media.callback(self.cog, self.interaction)
@@ -59,13 +58,12 @@ class MediaCogTestCase(CogWithCommandsBaseTestCase):
         _, kwargs = self.interaction.edit_original_response.call_args
         self.assertEqual(kwargs['content'], self.cog.message_add_future_media)
 
-        view_elements = kwargs['view']._children
+        view_elements = kwargs['view'].children
         self.assertEqual(len(view_elements), 1)
         media_category_select = view_elements[0]
         self.assertEqual(media_category_select.user.id, self.user.id)
-        options = media_category_select._underlying.options
-        self.assertEqual(len(options), len(media_categories))
-        for n, option in enumerate(options):
+        self.assertEqual(len(media_category_select.options), len(media_categories))
+        for n, option in enumerate(media_category_select.options):
             category = media_categories[n]
             self.assertEqual(option.label, category.name)
             self.assertEqual(option.value, str(category.id))

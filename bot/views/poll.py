@@ -7,7 +7,7 @@ from pyrankvote.helpers import ElectionResults
 
 from api.assessment.models import Media, Poll
 from bot.cog import BaseCog
-from bot.views.base import BaseEmbed
+from bot.views.base import BaseEmbedView
 
 User = get_user_model()
 
@@ -45,7 +45,7 @@ class CandidateSwapButton(discord.ui.Button):
         await self.view.swap_item(interaction, self.is_up)
 
 
-class PollView(BaseEmbed):
+class PollView(BaseEmbedView):
     select_class = CandidateSelect
     swap_button_class = CandidateSwapButton
 
