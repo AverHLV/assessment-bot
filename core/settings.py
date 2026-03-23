@@ -215,7 +215,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 if FEATURE_SENTRY:
     SENTRY_DSN = env('APP_SENTRY_DSN', default='')
     SENTRY_SAMPLE_RATE = env.float('APP_SENTRY_SAMPLE_RATE', default=0.5)
-    sentry_sampler_exclude_regex = re.compile(rf'^(/liveness/|/readiness/|/admin/|{STATIC_URL})')
+    sentry_sampler_exclude_regex = re.compile(rf'(/liveness|/readiness|/admin|{STATIC_URL})')
 
     def sentry_traces_sampler(context: dict) -> float:
         """Determine sample rate based on transaction context."""
