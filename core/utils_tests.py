@@ -64,7 +64,7 @@ def pause_date_auto_fields(fields: list) -> Callable:
 class TestRunner(DiscoverRunner):
     def run_tests(self, test_labels, **kwargs):
         logging.disable(logging.CRITICAL)
-        sentry_sdk.init()  # disable events capturing
+        sentry_sdk.init(dsn='')  # disable events capturing
         test_password_hashers = ['django.contrib.auth.hashers.MD5PasswordHasher']
         with override_settings(PASSWORD_HASHERS=test_password_hashers):
             return super().run_tests(test_labels, **kwargs)

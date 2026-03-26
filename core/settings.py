@@ -237,4 +237,4 @@ if FEATURE_SENTRY:
         ],
     )
 else:
-    sentry_sdk.init()
+    sentry_sdk.init(dsn='')
