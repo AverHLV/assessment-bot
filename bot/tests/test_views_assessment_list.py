@@ -1,8 +1,11 @@
 import factory
 from asgiref.sync import sync_to_async
 
+from unittest.mock import Mock
+
 from api.assessment.models import Assessment, Media
 from api.assessment.tests.factories import AssessmentFactory, MediaFactory
+from bot.bot import AssessmentBot
 from bot.tests.base import PaginatorBaseTestCase
 from bot.views.assessment_list import AssessmentPaginator, MyAssessmentPaginator
 
@@ -119,6 +122,19 @@ class MyAssessmentPaginatorTestCase(PaginatorBaseTestCase):
             content=None,
             embed=paginator.get_embed.return_value,
             view=paginator,
+        )
+
+    async def test__my_assessment_paginator__on_error(self):
+        item = Mock()
+        error = ValueError('error')
+        paginator = self.get_paginator()
+
+        await paginator.on_error(self.interaction, error, item)
+
+        self.interaction.edit_original_response.assert_called_once_with(
+            content=AssessmentBot.error_message,
+            embed=None,
+            view=None,
         )
 
     async def test__my_assessment_paginator__modal__on_submit(self):

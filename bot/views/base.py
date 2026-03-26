@@ -10,7 +10,15 @@ from bot.cog import BaseCog
 from bot.modals import BaseFilterModal
 
 
-class BaseEmbedView(discord.ui.View, metaclass=ABCMeta):
+class BaseView(discord.ui.View, metaclass=ABCMeta):
+    async def on_error(self, interaction: discord.Interaction, error: Exception, item: discord.ui.Item, /) -> None:
+        from bot.bot import AssessmentBot
+
+        await interaction.edit_original_response(content=AssessmentBot.error_message, embed=None, view=None)
+        await super().on_error(interaction, error, item)
+
+
+class BaseEmbedView(BaseView, metaclass=ABCMeta):
     embed_item_value_max_length: int = 1024
 
     def strip_embed_item_value(self, value: str) -> str:

@@ -4,6 +4,7 @@ import discord
 
 from api.assessment.models import Media
 from bot.modals import AssessmentModal
+from bot.views.base import BaseView
 
 User = get_user_model()
 
@@ -35,7 +36,7 @@ class MediaSelect(discord.ui.Select):
         await interaction.response.send_modal(modal)
 
 
-class MediaSelectToAssessView(discord.ui.View):
+class MediaSelectToAssessView(BaseView):
     select_class = MediaSelect
 
     def __init__(self, *args, user: User, media: list[Media], **kwargs):

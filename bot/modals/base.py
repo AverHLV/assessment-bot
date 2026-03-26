@@ -9,7 +9,15 @@ from abc import ABCMeta, abstractmethod
 from bot.cog import BaseCog
 
 
-class BaseFilterModal(discord.ui.Modal, title='Search', metaclass=ABCMeta):
+class BaseModal(discord.ui.Modal, metaclass=ABCMeta):
+    async def on_error(self, interaction: discord.Interaction, error: Exception, /) -> None:
+        from bot.bot import AssessmentBot
+
+        await interaction.edit_original_response(content=AssessmentBot.error_message, embed=None, view=None)
+        await super().on_error(interaction, error)
+
+
+class BaseFilterModal(BaseModal, title='Search', metaclass=ABCMeta):
     def __init__(self, paginator, **kwargs):
         super().__init__(**kwargs)
         self.paginator = paginator
@@ -25,7 +33,7 @@ class BaseFilterModal(discord.ui.Modal, title='Search', metaclass=ABCMeta):
         pass
 
 
-class BaseCreateModal(discord.ui.Modal):
+class BaseCreateModal(BaseModal):
     form_class: type[forms.ModelForm]
     form_valid_message = 'Saved. I sealed it carefully in the archives.'
 

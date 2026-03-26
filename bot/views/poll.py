@@ -7,7 +7,7 @@ from pyrankvote.helpers import ElectionResults
 
 from api.assessment.models import Media, Poll
 from bot.cog import BaseCog
-from bot.views.base import BaseEmbedView
+from bot.views.base import BaseEmbedView, BaseView
 
 User = get_user_model()
 
@@ -150,7 +150,7 @@ class PollSelect(discord.ui.Select):
         await interaction.response.edit_message(content=None, embed=embed, view=view)
 
 
-class PollSelectView(discord.ui.View):
+class PollSelectView(BaseView):
     select_class = PollSelect
 
     def __init__(self, *args, user: User, polls: list[Poll], **kwargs):

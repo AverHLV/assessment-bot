@@ -8,6 +8,7 @@ from unittest.mock import patch
 from api.assessment.models import Assessment, Media
 from api.assessment.tests.factories import MediaFactory
 from api.user.tests.factories import UserFactory
+from bot.bot import AssessmentBot
 from bot.tests.base import CogBaseTestCase
 from bot.views.assessment_rate import AssessmentModal
 
@@ -112,3 +113,15 @@ class AssessmentModalTestCase(CogBaseTestCase):
         self.assertIn('mark', msg)
         expected_error = 'Value must be an integer or end with .5.'
         self.assertIn(expected_error, msg)
+
+    async def test__assessment_modal__on_error(self):
+        error = ValueError('error')
+        modal = self.modal_class(user=self.user, media=self.media)
+
+        await modal.on_error(self.interaction, error)
+
+        self.interaction.edit_original_response.assert_called_once_with(
+            content=AssessmentBot.error_message,
+            embed=None,
+            view=None,
+        )
