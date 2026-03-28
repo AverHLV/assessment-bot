@@ -26,7 +26,7 @@ class AssessmentPaginatorTestCase(PaginatorBaseTestCase):
         modal.media_name._value = media.name[:5].upper()
         await modal.on_submit(self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction, edit=True)
+        self.assert_thinking(self.interaction, edit=True)
         item_count = await paginator.items_queryset.acount()
         self.assertEqual(item_count, 1)
         first_media = await paginator.items_queryset.afirst()
@@ -52,7 +52,7 @@ class MyAssessmentPaginatorTestCase(PaginatorBaseTestCase):
 
         await paginator.previous.callback(self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction, edit=True)
+        self.assert_thinking(self.interaction, edit=True)
         self.assertFalse(paginator.page)
         self.interaction.edit_original_response.assert_called_once_with(
             content=None,
@@ -76,7 +76,7 @@ class MyAssessmentPaginatorTestCase(PaginatorBaseTestCase):
 
         await paginator.next.callback(self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction, edit=True)
+        self.assert_thinking(self.interaction, edit=True)
         self.assertEqual(paginator.page, old_page + 1)
         self.interaction.edit_original_response.assert_called_once_with(
             content=None,
@@ -112,7 +112,7 @@ class MyAssessmentPaginatorTestCase(PaginatorBaseTestCase):
 
         await paginator.clear.callback(self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction, edit=True)
+        self.assert_thinking(self.interaction, edit=True)
         self.assertFalse(paginator.page)
         self.assertEqual(paginator.total_pages, 1)
         item_count = await paginator.items_queryset.acount()
@@ -147,7 +147,7 @@ class MyAssessmentPaginatorTestCase(PaginatorBaseTestCase):
         modal.media_name._value = self.assessment.media.name[:5].upper()
         await modal.on_submit(self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction, edit=True)
+        self.assert_thinking(self.interaction, edit=True)
         self.assertFalse(paginator.page)
         self.assertEqual(paginator.total_pages, 1)
         item_count = await paginator.items_queryset.acount()

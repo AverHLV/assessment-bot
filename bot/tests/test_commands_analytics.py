@@ -72,7 +72,8 @@ class AnalyticsCogTestCase(CogWithCommandsBaseTestCase):
 
         await self.cog.compare.callback(self.cog, self.interaction, self.discord_user)
 
-        self.assert_thinking_placeholder(self.interaction)
+        self.assert_thinking(self.interaction)
+        self.assert_thinking_with_loop(self.interaction)
 
         completion_mock.assert_called_once()
         _, kwargs = completion_mock.call_args
@@ -104,7 +105,7 @@ class AnalyticsCogTestCase(CogWithCommandsBaseTestCase):
             second_user=self.discord_user,
         )
 
-        self.assert_thinking_placeholder(self.interaction)
+        self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once_with(content=self.cog.message_compare_same_users)
         completion_mock.assert_not_called()
 
@@ -115,7 +116,7 @@ class AnalyticsCogTestCase(CogWithCommandsBaseTestCase):
 
         await self.cog.compare.callback(self.cog, self.interaction, self.discord_user)
 
-        self.assert_thinking_placeholder(self.interaction)
+        self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once_with(content=self.cog.message_compare_no_users)
         completion_mock.assert_not_called()
 
@@ -126,6 +127,6 @@ class AnalyticsCogTestCase(CogWithCommandsBaseTestCase):
 
         await self.cog.compare.callback(self.cog, self.interaction, self.discord_user)
 
-        self.assert_thinking_placeholder(self.interaction)
+        self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once_with(content=self.cog.message_compare_no_assessments)
         completion_mock.assert_not_called()

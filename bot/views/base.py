@@ -6,11 +6,13 @@ import discord
 import math
 from abc import ABCMeta, abstractmethod
 
-from bot.cog import BaseCog
 from bot.modals import BaseFilterModal
+from bot.thinking import ThinkingRegistry, thinking_registry
 
 
 class BaseView(discord.ui.View, metaclass=ABCMeta):
+    thinking: ThinkingRegistry = thinking_registry
+
     async def on_error(self, interaction: discord.Interaction, error: Exception, item: discord.ui.Item, /) -> None:
         from bot.bot import AssessmentBot
 
@@ -70,7 +72,7 @@ class BasePaginator(BaseEmbedView, metaclass=ABCMeta):
             await interaction.response.defer()
             return
 
-        await BaseCog.show_thinking_placeholder(interaction, edit=True)
+        await self.thinking.show_thinking(interaction, edit=True)
         self.page -= 1
         await self.refresh(interaction)
 
@@ -80,7 +82,7 @@ class BasePaginator(BaseEmbedView, metaclass=ABCMeta):
             await interaction.response.defer()
             return
 
-        await BaseCog.show_thinking_placeholder(interaction, edit=True)
+        await self.thinking.show_thinking(interaction, edit=True)
         self.page += 1
         await self.refresh(interaction)
 
@@ -115,6 +117,6 @@ class BaseFilterPaginator(BasePaginator, metaclass=ABCMeta):
 
     @discord.ui.button(label='Clear', style=discord.ButtonStyle.secondary)
     async def clear(self, interaction: discord.Interaction, _button: discord.Button) -> None:
-        await BaseCog.show_thinking_placeholder(interaction, edit=True)
+        await self.thinking.show_thinking(interaction, edit=True)
         await self.clear_items_queryset()
         await self.refresh(interaction)

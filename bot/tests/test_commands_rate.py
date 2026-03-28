@@ -28,7 +28,7 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
 
         await self.cog.rates.callback(self.cog, self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction)
+        self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
         _, kwargs = self.interaction.edit_original_response.call_args
         self.assertEqual(kwargs['content'], self.cog.message_rates)
@@ -48,7 +48,7 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
     async def test__assessment_cog__rates__no_media(self):
         await self.cog.rates.callback(self.cog, self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction)
+        self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once_with(content=self.cog.message_rates_no_assessments)
 
     async def test__assessment_cog__my_rates(self):
@@ -64,7 +64,7 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
 
         await self.cog.my_rates.callback(self.cog, self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction)
+        self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
         _, kwargs = self.interaction.edit_original_response.call_args
         self.assertEqual(kwargs['content'], self.cog.message_my_rates)
@@ -86,7 +86,7 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
     async def test__assessment_cog__my_rates__no_assessments(self):
         await self.cog.my_rates.callback(self.cog, self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction)
+        self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once_with(
             content=self.cog.message_my_rates_no_assessments,
         )
@@ -102,7 +102,7 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
 
         await self.cog.rate.callback(self.cog, self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction)
+        self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
         _, kwargs = self.interaction.edit_original_response.call_args
         self.assertEqual(kwargs['content'], self.cog.message_rate)
@@ -128,5 +128,5 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
         self.assertIsNotNone(user)
         self.assertEqual(user.username, self.interaction.user.name)
 
-        self.assert_thinking_placeholder(self.interaction)
+        self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once_with(content=self.cog.message_rate_no_media)

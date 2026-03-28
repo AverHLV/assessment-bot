@@ -24,7 +24,7 @@ class MediaCogTestCase(CogWithCommandsBaseTestCase):
 
         await self.cog.future_media.callback(self.cog, self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction)
+        self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
         _, kwargs = self.interaction.edit_original_response.call_args
         self.assertEqual(kwargs['content'], self.cog.message_future_media)
@@ -44,7 +44,7 @@ class MediaCogTestCase(CogWithCommandsBaseTestCase):
     async def test__media_cog__future_media__no_media(self):
         await self.cog.future_media.callback(self.cog, self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction)
+        self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once_with(content=self.cog.message_future_media_no_media)
 
     async def test__media_cog__add_future_media(self):
@@ -53,7 +53,7 @@ class MediaCogTestCase(CogWithCommandsBaseTestCase):
 
         await self.cog.add_future_media.callback(self.cog, self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction)
+        self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
         _, kwargs = self.interaction.edit_original_response.call_args
         self.assertEqual(kwargs['content'], self.cog.message_add_future_media)

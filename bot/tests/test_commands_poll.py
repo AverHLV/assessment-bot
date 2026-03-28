@@ -35,7 +35,7 @@ class PollCogTestCase(CogWithCommandsBaseTestCase):
 
         await self.cog.vote.callback(self.cog, self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction)
+        self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
         _, kwargs = self.interaction.edit_original_response.call_args
         self.assertEqual(kwargs['content'], self.cog.message_poll)
@@ -55,7 +55,7 @@ class PollCogTestCase(CogWithCommandsBaseTestCase):
     async def test__poll_cog__vote__no_invited(self):
         await self.cog.vote.callback(self.cog, self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction)
+        self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once_with(content=self.cog.message_poll_no_polls)
 
     async def test__poll_cog__vote__already_voted(self):
@@ -63,7 +63,7 @@ class PollCogTestCase(CogWithCommandsBaseTestCase):
 
         await self.cog.vote.callback(self.cog, self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction)
+        self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
         _, kwargs = self.interaction.edit_original_response.call_args
         self.assertNotIn('view', kwargs)
@@ -73,7 +73,7 @@ class PollCogTestCase(CogWithCommandsBaseTestCase):
 
         await self.cog.vote.callback(self.cog, self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction)
+        self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once()
         _, kwargs = self.interaction.edit_original_response.call_args
         poll_select = kwargs['view'].children[0]

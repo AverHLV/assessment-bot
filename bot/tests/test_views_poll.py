@@ -128,7 +128,7 @@ class PollViewTestCase(CogBaseTestCase):
         expected_ranks = [candidate.id for candidate in self.candidates]
         self.assertListEqual(vote.ranks, expected_ranks)
 
-        self.assert_thinking_placeholder(self.interaction, edit=True)
+        self.assert_thinking(self.interaction, edit=True)
         self.interaction.edit_original_response.assert_called_once_with(
             content=view.message_vote_saved,
             embed=None,

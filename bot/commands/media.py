@@ -13,7 +13,7 @@ class MediaCog(BaseCog):
 
     @command(description='These stories are marked for later trials. For now, they rest untouched.')
     async def future_media(self, interaction: discord.Interaction) -> None:
-        await self.show_thinking_placeholder(interaction)
+        await self.thinking.show_thinking(interaction)
         media_queryset = Media.objects.initial()
         media_count = await media_queryset.acount()
         if not media_count:
@@ -29,7 +29,7 @@ class MediaCog(BaseCog):
     @command(description='Add a story that will one day face judgment.')
     @checks.cooldown(rate=5, per=60, key=lambda interaction: interaction.user.id)
     async def add_future_media(self, interaction: discord.Interaction) -> None:
-        await self.show_thinking_placeholder(interaction)
+        await self.thinking.show_thinking(interaction)
         user = await self.get_user(interaction)
 
         media_categories = MediaCategory.objects.order_by('name')

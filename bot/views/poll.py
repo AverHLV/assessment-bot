@@ -6,7 +6,6 @@ from asgiref.sync import sync_to_async
 from pyrankvote.helpers import ElectionResults
 
 from api.assessment.models import Media, Poll
-from bot.cog import BaseCog
 from bot.views.base import BaseEmbedView, BaseView
 
 User = get_user_model()
@@ -119,7 +118,7 @@ class PollView(BaseEmbedView):
 
     @discord.ui.button(label='Confirm', style=discord.ButtonStyle.primary, row=1)
     async def confirm(self, interaction: discord.Interaction, _button: discord.Button) -> None:
-        await BaseCog.show_thinking_placeholder(interaction, edit=True)
+        await self.thinking.show_thinking(interaction, edit=True)
         await self.poll.save_vote(self.user, self.candidates)
         await interaction.edit_original_response(content=self.message_vote_saved, embed=None, view=None)
 

@@ -6,10 +6,12 @@ from asgiref.sync import sync_to_async
 
 from abc import ABCMeta, abstractmethod
 
-from bot.cog import BaseCog
+from bot.thinking import ThinkingRegistry, thinking_registry
 
 
 class BaseModal(discord.ui.Modal, metaclass=ABCMeta):
+    thinking: ThinkingRegistry = thinking_registry
+
     async def on_error(self, interaction: discord.Interaction, error: Exception, /) -> None:
         from bot.bot import AssessmentBot
 
@@ -23,7 +25,7 @@ class BaseFilterModal(BaseModal, title='Search', metaclass=ABCMeta):
         self.paginator = paginator
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
-        await BaseCog.show_thinking_placeholder(interaction, edit=True)
+        await self.thinking.show_thinking(interaction, edit=True)
         items_queryset = await self.filter_items_queryset(self.paginator.items_queryset_base)
         await self.paginator.set_items_queryset(items_queryset)
         await self.paginator.refresh(interaction)
@@ -56,12 +58,12 @@ class BaseCreateModal(BaseModal):
         return f'{msg}Let the ritual become once more.'
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
-        await BaseCog.show_thinking_placeholder(interaction, edit=True)
-
-        form = self.get_form()
-        if await sync_to_async(form.is_valid)():
-            message = await self.form_valid(form)
-        else:
-            message = await self.form_invalid(form)
+        await self.thinking.show_thinking(interaction, edit=True)
+        async with self.thinking.start_task(self.thinking.show_thinking_with_loop, interaction=interaction):
+            form = self.get_form()
+            if await sync_to_async(form.is_valid)():
+                message = await self.form_valid(form)
+            else:
+                message = await self.form_invalid(form)
 
         await interaction.edit_original_response(content=message, embed=None, view=None)

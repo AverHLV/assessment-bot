@@ -2,6 +2,7 @@ from django.conf import settings
 from django.test import SimpleTestCase
 
 from asgiref.sync import async_to_sync
+from httpx import TimeoutException
 
 from http import HTTPStatus
 from unittest.mock import patch
@@ -67,7 +68,7 @@ class AsyncOpenRouterClientTestCase(SimpleTestCase):
     @patch('api.llm.clients.AsyncOpenRouterClient.create_completion')
     @async_to_sync
     async def test__run_create_completion__timeout(self, completion_mock):
-        completion_mock.side_effect = TimeoutError
+        completion_mock.side_effect = TimeoutException(message='timeout')
 
         response = await run_create_completion(self.test_client, self.prompt)
 

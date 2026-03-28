@@ -48,7 +48,7 @@ class MediaModalTestCase(CogBaseTestCase):
 
         await modal.on_submit(self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction, edit=True)
+        self.assert_thinking(self.interaction, edit=True)
         media = await Media.objects.afirst()
         self.assertIsNotNone(media)
         self.assert_media_instance(media, self.user, self.name, self.url, self.category)
@@ -67,7 +67,7 @@ class MediaModalTestCase(CogBaseTestCase):
 
         await modal.on_submit(self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction, edit=True)
+        self.assert_thinking(self.interaction, edit=True)
         media = await Media.objects.afirst()
         self.assertIsNotNone(media)
         self.assert_media_instance(media, self.user, self.name, self.url, self.category, description=self.description)
@@ -87,7 +87,7 @@ class MediaModalTestCase(CogBaseTestCase):
 
         await modal.on_submit(self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction, edit=True)
+        self.assert_thinking(self.interaction, edit=True)
         media_count = await Media.objects.acount()
         self.assertEqual(media_count, 1)
 

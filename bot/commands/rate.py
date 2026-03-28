@@ -21,7 +21,7 @@ class AssessmentCog(BaseCog):
 
     @command(description='Witness how this world was judged by many hands.')
     async def rates(self, interaction: discord.Interaction) -> None:
-        await self.show_thinking_placeholder(interaction)
+        await self.thinking.show_thinking(interaction)
         media_queryset = Media.objects.completed()
         media_count = await media_queryset.acount()
         if not media_count:
@@ -45,7 +45,7 @@ class AssessmentCog(BaseCog):
 
     @command(description='The echoes of your past judgments rise again.')
     async def my_rates(self, interaction: discord.Interaction) -> None:
-        await self.show_thinking_placeholder(interaction)
+        await self.thinking.show_thinking(interaction)
         user = await self.get_user(interaction)
         assessment_queryset = user.assessments.all()
         assessment_count = await assessment_queryset.acount()
@@ -72,7 +72,7 @@ class AssessmentCog(BaseCog):
 
     @command(description='Another judgment calls...')
     async def rate(self, interaction: discord.Interaction) -> None:
-        await self.show_thinking_placeholder(interaction)
+        await self.thinking.show_thinking(interaction)
         user = await self.get_user(interaction)
         media = (
             Media.objects.for_assessment(user_id=user.id)

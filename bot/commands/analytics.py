@@ -56,7 +56,7 @@ class AnalyticsCog(BaseCog):
         user: discord.User,
         second_user: discord.User | None = None,
     ) -> None:
-        await self.show_thinking_placeholder(interaction)
+        await self.thinking.show_thinking(interaction)
         user_ids = await self.compare_check_users(interaction, user, second_user=second_user or interaction.user)
         if not user_ids:
             return
@@ -90,10 +90,11 @@ class AnalyticsCog(BaseCog):
         for field in embed.fields:
             comparison_stats = f'{comparison_stats}{field.name}\n{field.value}\n'
         prompt = render_to_string(template_name='comparison.html', context={'comparison_stats': comparison_stats})
-        response = await run_create_completion(
-            client=self.llm_client,
-            prompt=prompt,
-            default_message=self.llm_client_message_compare_default_message,
-        )
+        async with self.thinking.start_task(self.thinking.show_thinking_with_loop, interaction=interaction):
+            response = await run_create_completion(
+                client=self.llm_client,
+                prompt=prompt,
+                default_message=self.llm_client_message_compare_default_message,
+            )
 
         await interaction.edit_original_response(content=response, embed=embed, view=view)

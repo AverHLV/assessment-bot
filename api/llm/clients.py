@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db.models import TextChoices
 
-from httpx import HTTPStatusError
+from httpx import HTTPStatusError, TimeoutException
 
 from http import HTTPStatus
 
@@ -23,7 +23,7 @@ async def run_create_completion(
     try:
         response = await client.create_completion(messages=messages)
         return response['choices'][0]['message']['content']
-    except TimeoutError:
+    except TimeoutException:
         return default_message
     except HTTPStatusError as exc:
         if exc.response.status_code != HTTPStatus.TOO_MANY_REQUESTS:

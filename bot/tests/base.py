@@ -36,19 +36,26 @@ class CogBaseTestCase(TestCase):
         self.interaction = AsyncMock()
         self.bot = AsyncMock()
         self.cog = self.cog_class(self.bot)
+        self.cog.thinking.start_task = get_async_context_manager_mock()
 
-    def assert_thinking_placeholder(self, interaction: AsyncMock, edit: bool = False) -> None:
+    def assert_thinking(self, interaction: AsyncMock, edit: bool = False) -> None:
         if edit:
             interaction.response.edit_message.assert_called_once_with(
-                content=self.cog.message_thinking_placeholder,
+                content=self.cog.thinking.message_thinking,
                 embed=None,
                 view=None,
             )
         else:
             interaction.response.send_message.assert_called_once_with(
-                content=self.cog.message_thinking_placeholder,
+                content=self.cog.thinking.message_thinking,
                 ephemeral=True,
             )
+
+    def assert_thinking_with_loop(self, interaction: AsyncMock) -> None:
+        self.cog.thinking.start_task.assert_called_once_with(
+            self.cog.thinking.show_thinking_with_loop,
+            interaction=interaction,
+        )
 
 
 class CogWithCommandsBaseTestCase(CogBaseTestCase):

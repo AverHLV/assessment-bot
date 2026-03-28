@@ -14,7 +14,7 @@ class PollCog(BaseCog):
 
     @command(description='Step into a poll and whisper your judgment of what is yet to come.')
     async def vote(self, interaction: discord.Interaction) -> None:
-        await self.show_thinking_placeholder(interaction)
+        await self.thinking.show_thinking(interaction)
         user = await self.get_user(interaction)
 
         media_base = Media.objects.initial().exclude(creator_id=user.id)

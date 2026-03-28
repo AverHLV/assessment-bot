@@ -52,7 +52,8 @@ class AssessmentModalTestCase(CogBaseTestCase):
 
         await modal.on_submit(self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction, edit=True)
+        self.assert_thinking(self.interaction, edit=True)
+        self.assert_thinking_with_loop(self.interaction)
         assessment = await self.media.assessments.filter(user_id=self.user.id).afirst()
         self.assertIsNotNone(assessment)
         self.assert_assessment_instance(assessment, self.user, self.media, self.mark)
@@ -82,7 +83,8 @@ class AssessmentModalTestCase(CogBaseTestCase):
 
         await modal.on_submit(self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction, edit=True)
+        self.assert_thinking(self.interaction, edit=True)
+        self.assert_thinking_with_loop(self.interaction)
         assessment = await self.media.assessments.filter(user_id=self.user.id).afirst()
         self.assertIsNotNone(assessment)
         self.assert_assessment_instance(assessment, self.user, self.media, self.mark, partial=self.partial)
@@ -102,7 +104,8 @@ class AssessmentModalTestCase(CogBaseTestCase):
 
         await modal.on_submit(self.interaction)
 
-        self.assert_thinking_placeholder(self.interaction, edit=True)
+        self.assert_thinking(self.interaction, edit=True)
+        self.assert_thinking_with_loop(self.interaction)
         assessment_exists = await self.media.assessments.filter(user_id=self.user.id).aexists()
         self.assertFalse(assessment_exists)
 
