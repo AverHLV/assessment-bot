@@ -36,6 +36,7 @@ class MediaAdmin(admin.ModelAdmin):
         'update_dt',
         'assessment_status',
         'assessment_until_dt',
+        'meta_mark',
         'category',
         'display_creator',
     )

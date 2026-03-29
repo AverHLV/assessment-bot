@@ -1,11 +1,64 @@
 from django.test import TestCase
 
 import factory
+from asgiref.sync import async_to_sync, sync_to_async
 from pyrankvote.helpers import ElectionResults
 
-from api.assessment.models import Poll
+from decimal import Decimal
+from unittest.mock import patch
+
+from api.assessment import errors
+from api.assessment.clients import AsyncOMDbClient
+from api.assessment.models import MediaCategory, Poll
 from api.assessment.tests.factories import MediaFactory, PollFactory, VoteFactory
 from api.user.tests.factories import UserFactory
+
+
+class MediaTestCase(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.movie_category = MediaCategory.objects.movie()
+        cls.game_category = MediaCategory.objects.game()
+
+    def setUp(self):
+        self.name = 'media name'
+        self.response_data = {'imdbRating': '5.7543'}
+
+    @patch('api.assessment.models.omdb_client.search')
+    @async_to_sync
+    async def test__media_populate_meta_mark(self, search_mock):
+        search_mock.return_value = self.response_data
+        media = await sync_to_async(MediaFactory.create)(name=self.name, category=self.movie_category)
+
+        await media.populate_meta_mark()
+
+        await media.arefresh_from_db(fields=['meta_mark'])
+        expected_meta_mark = round(Decimal(self.response_data['imdbRating']), 1)
+        self.assertEqual(media.meta_mark, expected_meta_mark)
+        search_mock.assert_called_once_with(title=self.name)
+
+    @patch('api.assessment.models.omdb_client.search')
+    @async_to_sync
+    async def test__media_populate_meta_mark__unsupported_category(self, search_mock):
+        media = await sync_to_async(MediaFactory.create)(name=self.name, category=self.game_category)
+
+        await media.populate_meta_mark()
+
+        await media.arefresh_from_db(fields=['meta_mark'])
+        self.assertIsNone(media.meta_mark)
+        search_mock.assert_not_called()
+
+    @patch('api.assessment.models.omdb_client.search')
+    @async_to_sync
+    async def test__media_populate_meta_mark__not_found(self, search_mock):
+        search_mock.side_effect = errors.OMDbError(error=AsyncOMDbClient.ErrorMessage.NOT_FOUND)
+        media = await sync_to_async(MediaFactory.create)(name=self.name, category=self.movie_category)
+
+        await media.populate_meta_mark()
+
+        await media.arefresh_from_db(fields=['meta_mark'])
+        self.assertIsNone(media.meta_mark)
+        search_mock.assert_called_once()
 
 
 class PollTestCase(TestCase):

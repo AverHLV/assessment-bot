@@ -18,8 +18,8 @@ class HTTPClientResponseType(StrEnum):
 
 
 class AsyncHTTPBaseClient:
-    DEFAULT_TIMEOUT = 10
-    DEFAULT_MAX_RETRIES = 2
+    DEFAULT_TIMEOUT = 8
+    DEFAULT_MAX_RETRIES = 0
     _LOG_MAX_BODY_LENGTH = 300
 
     def __init__(self, host: str, timeout: int = None, max_retries: int = None, proxy: str = None, **kwargs):

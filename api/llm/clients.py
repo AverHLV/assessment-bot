@@ -36,9 +36,6 @@ class AsyncOpenRouterClient(AsyncHTTPTokenAuthBaseClient):
         ASSISTANT = 'assistant'
         USER = 'user'
 
-    DEFAULT_TIMEOUT = 8
-    DEFAULT_MAX_RETRIES = 0
-
     def __init__(self, **kwargs):
         kwargs.setdefault('host', settings.OPENROUTER_URL)
         kwargs.setdefault('access_token', settings.OPENROUTER_API_KEY)

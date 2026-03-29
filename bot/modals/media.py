@@ -50,6 +50,7 @@ class MediaModal(BaseCreateModal):
 
     async def save(self, form: forms.ModelForm) -> Media:
         form.instance.creator_id = self.user.id
+        await form.instance.populate_meta_mark(save=False)
         return await super().save(form)
 
 

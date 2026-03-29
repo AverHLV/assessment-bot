@@ -9,7 +9,8 @@ from pyrankvote.helpers import ElectionResults
 
 from decimal import Decimal
 
-from api.assessment import managers
+from api.assessment import managers, omdb_client
+from api.assessment.errors import OMDbError
 from core.models import Directory, TimeStamped
 
 User = get_user_model()
@@ -32,6 +33,20 @@ class MediaCategory(Directory):
 
     code = models.CharField(max_length=100, unique=True, choices=Code)
 
+    objects = managers.MediaCategoryQuerySet.as_manager()
+
+    @property
+    def is_movie(self) -> bool:
+        return self.code == self.Code.MOVIE
+
+    @property
+    def is_serial(self) -> bool:
+        return self.code == self.Code.SERIAL
+
+    @property
+    def is_anime(self) -> bool:
+        return self.code == self.Code.ANIME
+
 
 class Media(TimeStamped):
     class AssessmentStatus(models.TextChoices):
@@ -44,6 +59,16 @@ class Media(TimeStamped):
     description = models.TextField(blank=True, help_text='Description for quick media memorization.')
     assessment_status = models.CharField(choices=AssessmentStatus, default=AssessmentStatus.INITIAL)
     assessment_until_dt = models.DateTimeField(blank=True, null=True)
+    meta_mark = models.DecimalField(
+        max_digits=3,
+        decimal_places=1,
+        blank=True,
+        null=True,
+        validators=[
+            validators.MinValueValidator(Decimal('0')),
+            validators.MaxValueValidator(Decimal('10')),
+        ],
+    )
 
     category = models.ForeignKey(MediaCategory, on_delete=models.PROTECT, related_name='media')
     creator = models.ForeignKey(User, on_delete=models.PROTECT, related_name='media')
@@ -57,6 +82,21 @@ class Media(TimeStamped):
 
     def __str__(self):
         return f'{type(self).__name__} {self.id}: {self.name}'
+
+    async def populate_meta_mark(self, save: bool = True) -> None:
+        if not (self.category.is_movie or self.category.is_serial or self.category.is_anime):
+            return
+
+        try:
+            search_response = await omdb_client.search(title=self.name)
+        except OMDbError as exc:
+            if exc.error == omdb_client.ErrorMessage.NOT_FOUND:
+                return
+            raise
+
+        self.meta_mark = Decimal(search_response['imdbRating'])
+        if save:
+            await self.asave(update_fields=['meta_mark', 'update_dt'])
 
 
 class Assessment(models.Model):

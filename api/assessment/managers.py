@@ -2,6 +2,14 @@ from django.db import models
 from django.utils import timezone
 
 
+class MediaCategoryQuerySet(models.QuerySet):
+    def movie(self):
+        return self.get(code=self.model.Code.MOVIE)
+
+    def game(self):
+        return self.get(code=self.model.Code.GAME)
+
+
 class MediaQuerySet(models.QuerySet):
     def initial(self, **kwargs):
         return self.filter(assessment_status=self.model.AssessmentStatus.INITIAL, **kwargs)

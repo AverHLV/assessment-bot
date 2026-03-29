@@ -136,6 +136,9 @@ OPENROUTER_URL = env('APP_OPENROUTER_URL', default='https://openrouter')
 OPENROUTER_API_KEY = env('APP_OPENROUTER_API_KEY', default='key')
 OPENROUTER_MODEL = env('APP_OPENROUTER_MODEL', default='model')
 
+OMDB_URL = env('APP_OMDB_URL', default='https://omdb')
+OMDB_API_KEY = env('APP_OMDB_API_KEY', default='key')
+
 
 # Logging
 

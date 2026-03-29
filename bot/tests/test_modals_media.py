@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 
-from asgiref.sync import sync_to_async
+from asgiref.sync import async_to_sync, sync_to_async
+
+from unittest.mock import patch
 
 from api.assessment.models import Media, MediaCategory
 from api.assessment.tests.factories import MediaFactory
@@ -38,10 +40,13 @@ class MediaModalTestCase(CogBaseTestCase):
         self.assertEqual(media.name, name)
         self.assertEqual(media.url, url)
         self.assertEqual(media.description, description)
+        self.assertIsNone(media.meta_mark)
         self.assertEqual(media.category_id, category.id)
         self.assertEqual(media.creator_id, creator.id)
 
-    async def test__media_modal__on_submit(self):
+    @patch('api.assessment.models.Media.populate_meta_mark')
+    @async_to_sync
+    async def test__media_modal__on_submit(self, populate_mock):
         modal = self.modal_class(user=self.user, media_category=self.category)
         modal.name._value = self.name
         modal.url._value = self.url
@@ -58,8 +63,11 @@ class MediaModalTestCase(CogBaseTestCase):
             embed=None,
             view=None,
         )
+        populate_mock.assert_called_once_with(save=False)
 
-    async def test__media_modal__on_submit__description(self):
+    @patch('api.assessment.models.Media.populate_meta_mark')
+    @async_to_sync
+    async def test__media_modal__on_submit__description(self, populate_mock):
         modal = self.modal_class(user=self.user, media_category=self.category)
         modal.name._value = self.name
         modal.url._value = self.url
@@ -77,8 +85,11 @@ class MediaModalTestCase(CogBaseTestCase):
             embed=None,
             view=None,
         )
+        populate_mock.assert_called_once()
 
-    async def test__media_modal__on_submit__errors__validation_error(self):
+    @patch('api.assessment.models.Media.populate_meta_mark')
+    @async_to_sync
+    async def test__media_modal__on_submit__errors__validation_error(self, populate_mock):
         await sync_to_async(MediaFactory.create)(name=self.name, category=self.category)
 
         modal = self.modal_class(user=self.user, media_category=self.category)
@@ -95,3 +106,4 @@ class MediaModalTestCase(CogBaseTestCase):
         _, kwargs = self.interaction.edit_original_response.call_args
         expected_error = 'Media with this Name and Category already exists.'
         self.assertIn(expected_error, kwargs['content'])
+        populate_mock.assert_not_called()
