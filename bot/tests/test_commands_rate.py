@@ -5,6 +5,7 @@ import factory
 from asgiref.sync import sync_to_async
 
 from datetime import timedelta
+from decimal import Decimal
 
 from api.assessment.models import Media
 from api.assessment.tests.factories import AssessmentFactory, MediaFactory
@@ -24,6 +25,7 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
             partial=factory.Iterator(('', 'partial')),
             media__create_dt=factory.Iterator((current_time, current_time - timedelta(hours=1))),
             media__assessment_status=Media.AssessmentStatus.COMPLETED,
+            media__meta_mark=factory.Iterator((Decimal('5.7'), None)),
         )
 
         await self.cog.rates.callback(self.cog, self.interaction)
@@ -43,6 +45,7 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
             self.assertIn(assessment.media.category.name, field.name)
             self.assertIn(assessment.user.username, field.value)
             self.assertIn(str(assessment.mark), field.value)
+        self.assertIn(str(assessments[0].media.meta_mark), embed_fields[0].value)
         self.assertIn(assessments[1].partial, embed_fields[1].value)
 
     async def test__assessment_cog__rates__no_media(self):
@@ -53,7 +56,10 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
 
     async def test__assessment_cog__my_rates(self):
         current_time = timezone.now()
-        media = await sync_to_async(MediaFactory.create_batch)(size=2)
+        media = await sync_to_async(MediaFactory.create_batch)(
+            size=2,
+            meta_mark=factory.Iterator((Decimal('5.7'), None)),
+        )
         assessments = await sync_to_async(AssessmentFactory.create_batch)(
             size=len(media),
             create_dt=factory.Iterator((current_time, current_time - timedelta(hours=1))),
@@ -81,6 +87,7 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
             self.assertIn(str(assessment.mark), field.name)
             self.assertIn(assessment.media.category.name, field.value)
             self.assertIn(assessment.media.url, field.value)
+        self.assertIn(str(assessments[0].media.meta_mark), embed_fields[0].value)
         self.assertIn(assessments[1].partial, embed_fields[1].value)
 
     async def test__assessment_cog__my_rates__no_assessments(self):

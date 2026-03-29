@@ -36,7 +36,7 @@ class AssessmentCog(BaseCog):
         media_queryset = (
             media_queryset.select_related('category')
             .prefetch_related(models.Prefetch(lookup='assessments', queryset=assessments))
-            .only('name', 'category_id', 'category__name')
+            .only('name', 'meta_mark', 'category_id', 'category__name')
             .order_by('-create_dt')
         )
 
@@ -60,6 +60,7 @@ class AssessmentCog(BaseCog):
             'media__name',
             'media__url',
             'media__description',
+            'media__meta_mark',
             'media__category_id',
             'media__category__name',
         )

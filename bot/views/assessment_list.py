@@ -20,6 +20,8 @@ class AssessmentPaginator(BaseFilterPaginator):
                 if assessment.partial:
                     value = f'{value}, ({assessment.partial})'
                 value = f'{value}\n'
+            if media.meta_mark is not None:
+                value = f'{value}Meta mark - *{media.meta_mark}*\n'
             value = self.strip_embed_item_value(value)
 
             embed.add_field(name=name, value=value, inline=False)
@@ -36,6 +38,8 @@ class MyAssessmentPaginator(BaseFilterPaginator):
             value = f'{assessment.media.category.name}\n'
             if assessment.partial:
                 value = f'{value}{assessment.partial}\n'
+            if assessment.media.meta_mark is not None:
+                value = f'{value}Meta mark - *{assessment.media.meta_mark}*\n'
             value = f'{value}[Link]({assessment.media.url})\n{assessment.media.description}'
             value = self.strip_embed_item_value(value)
 
