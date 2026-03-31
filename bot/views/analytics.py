@@ -41,3 +41,10 @@ class CompareView(BaseEmbedView):
         embed.add_field(name='Biggest disagreements', value=disagreement_value, inline=False)
 
         return embed
+
+    @staticmethod
+    def get_comparison_stats(embed: discord.Embed) -> str:
+        comparison_stats = f'{embed.title}\n'
+        for field in embed.fields:
+            comparison_stats = f'{comparison_stats}{field.name}\n{field.value}\n'
+        return comparison_stats

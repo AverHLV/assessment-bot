@@ -1,14 +1,19 @@
+from django.contrib.auth import get_user_model
+
 import discord
 import factory
 from asgiref.sync import async_to_sync, sync_to_async
 
+from decimal import Decimal
 from unittest.mock import Mock, patch
 
-from api.assessment.models import Media
+from api.assessment.models import Assessment, Media
 from api.assessment.tests.factories import AssessmentFactory, MediaFactory
 from api.user.tests.factories import UserFactory
 from bot import commands
 from bot.tests.base import CogWithCommandsBaseTestCase
+
+User = get_user_model()
 
 
 class AnalyticsCogTestCase(CogWithCommandsBaseTestCase):
@@ -20,17 +25,19 @@ class AnalyticsCogTestCase(CogWithCommandsBaseTestCase):
 
         cls.users = [cls.user, UserFactory()]
         cls.media = MediaFactory.create_batch(
-            size=2,
+            size=len(cls.users),
             assessment_status=Media.AssessmentStatus.COMPLETED,
+            meta_mark=factory.Iterator(Decimal(mark) for mark in range(len(cls.users))),
         )
 
     def setUp(self):
         super().setUp()
 
+        self.response_content = 'response content'
         self.discord_user = Mock()
         self.discord_user.id = self.users[-1].external_id
 
-    def assert_compare_view_embed(self, embed: discord.Embed, prompt: str) -> None:
+    def assert_compare_view_embed(self, embed: discord.Embed, prompt: str, expected_users: list[User]) -> None:
         embed_fields = embed.fields
         self.assertEqual(len(embed_fields), 5)
         correlation_field = embed_fields[1]
@@ -50,7 +57,7 @@ class AnalyticsCogTestCase(CogWithCommandsBaseTestCase):
 
         mean_field = embed_fields[3]
         self.assertEqual(mean_field.name, 'Average marks')
-        for user in self.users:
+        for user in expected_users:
             self.assertIn(user.username, mean_field.value)
 
         disagreement_field = embed_fields[4]
@@ -61,7 +68,7 @@ class AnalyticsCogTestCase(CogWithCommandsBaseTestCase):
     @patch('bot.commands.analytics.run_create_completion')
     @async_to_sync
     async def test__analytics_cog__compare(self, completion_mock):
-        completion_mock.return_value = 'response content'
+        completion_mock.return_value = self.response_content
 
         assessments = await sync_to_async(AssessmentFactory.create_batch)(
             size=len(self.media) * len(self.users),
@@ -93,7 +100,7 @@ class AnalyticsCogTestCase(CogWithCommandsBaseTestCase):
         expected_groups = [assessments[:2], assessments[2:]]
         self.assertListEqual(list(view.groups.values()), expected_groups)
 
-        self.assert_compare_view_embed(kwargs['embed'], prompt)
+        self.assert_compare_view_embed(embed=kwargs['embed'], prompt=prompt, expected_users=self.users)
 
     @patch('bot.commands.analytics.run_create_completion')
     @async_to_sync
@@ -126,6 +133,68 @@ class AnalyticsCogTestCase(CogWithCommandsBaseTestCase):
         await sync_to_async(AssessmentFactory.create)(media=self.media[0], user=self.users[0])
 
         await self.cog.compare.callback(self.cog, self.interaction, self.discord_user)
+
+        self.assert_thinking(self.interaction)
+        self.interaction.edit_original_response.assert_called_once_with(content=self.cog.message_compare_no_assessments)
+        completion_mock.assert_not_called()
+
+    @patch('bot.commands.analytics.run_create_completion')
+    @async_to_sync
+    async def test__analytics_cog__compare_meta(self, completion_mock):
+        completion_mock.return_value = self.response_content
+
+        assessments = await sync_to_async(AssessmentFactory.create_batch)(
+            size=len(self.media),
+            mark=factory.Iterator(range(len(self.media))),
+            media=factory.Iterator(self.media),
+            user=self.user,
+        )
+
+        await self.cog.compare_meta.callback(self.cog, self.interaction)
+
+        self.assert_thinking(self.interaction)
+        self.assert_thinking_with_loop(self.interaction)
+
+        completion_mock.assert_called_once()
+        _, kwargs = completion_mock.call_args
+        prompt = kwargs['prompt']
+        for assessment in assessments:
+            self.assertIn(str(assessment.mark), prompt)
+            self.assertIn(str(assessment.media.meta_mark), prompt)
+            self.assertIn(assessment.user.username, prompt)
+            self.assertIn(assessment.media.name, prompt)
+
+        self.interaction.edit_original_response.assert_called_once()
+        _, kwargs = self.interaction.edit_original_response.call_args
+        self.assertEqual(kwargs['content'], completion_mock.return_value)
+        view = kwargs['view']
+        self.assertIsNotNone(view)
+        meta_user = User(id=-1, username='Meta mark')
+        expected_users = [self.user, meta_user]
+        self.assertListEqual(list(view.groups), expected_users)
+        meta_group = [
+            Assessment(id=assessment.id, mark=assessment.media.meta_mark, media=assessment.media, user=meta_user)
+            for assessment in assessments
+        ]
+        self.assertListEqual(list(view.groups.values()), [assessments, meta_group])
+
+        self.assert_compare_view_embed(embed=kwargs['embed'], prompt=prompt, expected_users=expected_users)
+
+    @patch('bot.commands.analytics.run_create_completion')
+    @async_to_sync
+    async def test__analytics_cog__compare_meta__user_not_found(self, completion_mock):
+        self.discord_user.id = -1
+
+        await self.cog.compare_meta.callback(self.cog, self.interaction, self.discord_user)
+
+        self.assert_thinking(self.interaction)
+        self.interaction.edit_original_response.assert_called_once_with(content=self.cog.message_compare_no_users)
+        completion_mock.assert_not_called()
+
+    @patch('bot.commands.analytics.run_create_completion')
+    @async_to_sync
+    async def test__analytics_cog__compare_meta__no_shared_media(self, completion_mock):
+        await self.cog.compare_meta.callback(self.cog, self.interaction)
 
         self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once_with(content=self.cog.message_compare_no_assessments)

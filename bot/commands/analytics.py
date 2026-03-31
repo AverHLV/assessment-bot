@@ -30,20 +30,34 @@ class AnalyticsCog(BaseCog):
     async def compare_check_users(
         self,
         interaction: discord.Interaction,
-        first_user: discord.User,
-        second_user: discord.User,
+        *users: discord.User | discord.Member,
     ) -> list[int] | None:
-        if first_user.id == second_user.id:
+        user_external_ids = {user.id for user in users}
+        if len(user_external_ids) != len(users):
             await interaction.edit_original_response(content=self.message_compare_same_users)
             return
 
-        user_external_ids = first_user.id, second_user.id
         user_ids = User.objects.filter(external_id__in=user_external_ids).values_list('id', flat=True)
         user_ids = [user_id async for user_id in user_ids]
         if len(user_ids) == len(user_external_ids):
             return user_ids
 
         await interaction.edit_original_response(content=self.message_compare_no_users)
+
+    async def make_comparison(self, interaction: discord.Interaction, groups: dict, template_name: str) -> None:
+        view = views.CompareView(groups=groups)
+        embed = await view.get_embed()
+
+        context = {'comparison_stats': view.get_comparison_stats(embed)}
+        prompt = render_to_string(template_name=template_name, context=context)
+        async with self.thinking.start_task(self.thinking.show_thinking_with_loop, interaction=interaction):
+            response = await run_create_completion(
+                client=self.llm_client,
+                prompt=prompt,
+                default_message=self.llm_client_message_compare_default_message,
+            )
+
+        await interaction.edit_original_response(content=response, embed=embed, view=view)
 
     @command(description='Compare how two lost souls judged the fading echoes of this dying world.')
     @describe(
@@ -57,7 +71,7 @@ class AnalyticsCog(BaseCog):
         second_user: discord.User | None = None,
     ) -> None:
         await self.thinking.show_thinking(interaction)
-        user_ids = await self.compare_check_users(interaction, user, second_user=second_user or interaction.user)
+        user_ids = await self.compare_check_users(interaction, user, second_user or interaction.user)
         if not user_ids:
             return
 
@@ -77,24 +91,47 @@ class AnalyticsCog(BaseCog):
             .order_by('user__username', 'media_id')
         )
         assessments = [assessment async for assessment in assessments]
-        if not assessments:
+        if len(assessments) < len(user_ids) * 2:
             await interaction.edit_original_response(content=self.message_compare_no_assessments)
             return
 
         # make comparison
         groups = {user: list(assessments) for user, assessments in groupby(assessments, key=lambda x: x.user)}
-        view = views.CompareView(groups=groups)
-        embed = await view.get_embed()
+        await self.make_comparison(interaction, groups, template_name='comparison.html')
 
-        comparison_stats = f'{embed.title}\n'
-        for field in embed.fields:
-            comparison_stats = f'{comparison_stats}{field.name}\n{field.value}\n'
-        prompt = render_to_string(template_name='comparison.html', context={'comparison_stats': comparison_stats})
-        async with self.thinking.start_task(self.thinking.show_thinking_with_loop, interaction=interaction):
-            response = await run_create_completion(
-                client=self.llm_client,
-                prompt=prompt,
-                default_message=self.llm_client_message_compare_default_message,
+    @command(description="Compare a soul's taste with the merciless consensus of the masses.")
+    @describe(
+        user='Another soul for comparison. Leave empty and I shall weigh your own heart against those distant voices.',
+    )
+    async def compare_meta(self, interaction: discord.Interaction, user: discord.User | None = None) -> None:
+        await self.thinking.show_thinking(interaction)
+        user_ids = await self.compare_check_users(interaction, user or interaction.user)
+        if not user_ids:
+            return
+
+        # retrieve assessments
+        assessments = (
+            Assessment.objects.filter(
+                user_id=user_ids[0],
+                media__assessment_status=Media.AssessmentStatus.COMPLETED,
+                media__meta_mark__isnull=False,
             )
+            .select_related('media', 'user')
+            .only('mark', 'media_id', 'media__name', 'media__meta_mark', 'user_id', 'user__username')
+            .order_by('user__username', 'media_id')
+        )
+        assessments = [assessment async for assessment in assessments]
+        if len(assessments) < len(user_ids) * 2:
+            await interaction.edit_original_response(content=self.message_compare_no_assessments)
+            return
 
-        await interaction.edit_original_response(content=response, embed=embed, view=view)
+        # make comparison
+        meta_user = User(id=-1, username='Meta mark')
+        groups = {
+            assessments[0].user: assessments,
+            meta_user: [
+                Assessment(id=assessment.id, mark=assessment.media.meta_mark, media=assessment.media, user=meta_user)
+                for assessment in assessments
+            ],
+        }
+        await self.make_comparison(interaction, groups, template_name='comparison_meta.html')
