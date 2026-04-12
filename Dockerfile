@@ -1,4 +1,4 @@
-FROM python:3.13.11-slim-trixie AS base
+FROM python:3.13.12-slim-trixie AS base
 
 ENV PYTHONFAULTHANDLER=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -23,7 +23,7 @@ ARG USER_ID=1000
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir pipenv==2026.0.3 && useradd --home $WORKON_HOME --uid $USER_ID $USER_NAME
+RUN pip install --no-cache-dir pipenv==2026.5.1 && useradd --home $WORKON_HOME --uid $USER_ID $USER_NAME
 
 USER $USER_NAME
 

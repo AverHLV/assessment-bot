@@ -36,12 +36,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.13.11"
+          python-version: "3.13.12"
           cache: "pipenv"
 
       - name: Install pipenv and dependencies
         run: |
-          pip install --no-cache-dir pipenv==2026.0.3
+          pip install --no-cache-dir pipenv==2026.5.1
           pipenv sync --dev
 
       - name: Run tests
