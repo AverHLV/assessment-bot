@@ -46,9 +46,12 @@ class AsyncOpenRouterClient(AsyncHTTPTokenAuthBaseClient):
         messages: list[dict],
         model: str = settings.OPENROUTER_MODEL,
         reasoning: dict = None,
+        provider: dict = None,
     ) -> HTTPClientResponseData:
         if not reasoning:
             reasoning = {'enabled': True, 'exclude': True}
+        if not provider:
+            provider = {'allow_fallbacks': True}
 
-        data = {'messages': messages, 'model': model, 'reasoning': reasoning}
+        data = {'messages': messages, 'model': model, 'reasoning': reasoning, 'provider': provider}
         return await self._make_request('POST', f'{self.host}/api/v1/chat/completions', body=data)

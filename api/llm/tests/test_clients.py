@@ -39,6 +39,8 @@ class AsyncOpenRouterClientTestCase(SimpleTestCase):
         self.assertEqual(body['model'], settings.OPENROUTER_MODEL)
         expected_reasoning = {'enabled': True, 'exclude': True}
         self.assertDictEqual(body['reasoning'], expected_reasoning)
+        expected_provider = {'allow_fallbacks': True}
+        self.assertDictEqual(body['provider'], expected_provider)
 
     @patch('api.llm.clients.AsyncOpenRouterClient.create_completion')
     @async_to_sync
