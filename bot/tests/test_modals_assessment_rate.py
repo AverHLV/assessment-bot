@@ -117,6 +117,16 @@ class AssessmentModalTestCase(CogBaseTestCase):
         expected_error = 'Value must be an integer or end with .5.'
         self.assertIn(expected_error, msg)
 
+    @patch('bot.modals.base.close_old_connections')
+    @async_to_sync
+    async def test__assessment_modal__interaction_check(self, close_mock):
+        modal = self.modal_class(user=self.user, media=self.media)
+
+        result = await modal.interaction_check(self.interaction)
+
+        self.assertTrue(result)
+        close_mock.assert_called_once()
+
     async def test__assessment_modal__on_error(self):
         error = ValueError('error')
         modal = self.modal_class(user=self.user, media=self.media)

@@ -23,6 +23,7 @@ class MessageCog(BaseCog):
         if message.author.bot or self.bot.user not in message.mentions:
             return
 
+        self.close_old_db_connections()
         async with message.channel.typing():
             user = await self.get_user(message)
             only_fields = 'mark', 'partial', 'media_id', 'media__name', 'media__category_id', 'media__category__name'

@@ -38,8 +38,9 @@ class MessageCogTestCase(CogWithCommandsBaseTestCase):
             self.message_history.append(previous_message)
 
     @patch('bot.messages.run_create_completion')
+    @patch('bot.cog.BaseCog.close_old_db_connections')
     @async_to_sync
-    async def test__message_cog__on_message(self, completion_mock):
+    async def test__message_cog__on_message(self, close_mock, completion_mock):
         self.message.channel.typing = get_async_context_manager_mock()
         self.message.channel.history = get_async_iterator_mock(self.message_history)
         completion_mock.return_value = 'response content'
@@ -48,6 +49,7 @@ class MessageCogTestCase(CogWithCommandsBaseTestCase):
 
         await self.cog.on_message(self.message)
 
+        close_mock.assert_called_once()
         completion_mock.assert_called_once()
         args, _ = completion_mock.call_args
         openrouter_client, prompt = args
@@ -66,7 +68,12 @@ class MessageCogTestCase(CogWithCommandsBaseTestCase):
         self.message.channel.history.assert_called_once_with(limit=5, before=self.message)
         self.message.reply.assert_called_once_with(completion_mock.return_value)
 
-    async def test__message_cog__on_message__not_mentioned(self):
+    @patch('bot.cog.BaseCog.close_old_db_connections')
+    @async_to_sync
+    async def test__message_cog__on_message__not_mentioned(self, close_mock):
         self.message.mentions = []
+
         await self.cog.on_message(self.message)
+
+        close_mock.assert_not_called()
         self.message.channel.typing.assert_not_called()

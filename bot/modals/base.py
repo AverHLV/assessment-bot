@@ -1,4 +1,5 @@
 from django import forms
+from django.db import close_old_connections
 from django.db.models import QuerySet
 
 import discord
@@ -11,6 +12,10 @@ from bot.thinking import ThinkingRegistry, thinking_registry
 
 class BaseModal(discord.ui.Modal, metaclass=ABCMeta):
     thinking: ThinkingRegistry = thinking_registry
+
+    async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
+        close_old_connections()
+        return await super().interaction_check(interaction)
 
     async def on_error(self, interaction: discord.Interaction, error: Exception, /) -> None:
         from bot.bot import AssessmentBot

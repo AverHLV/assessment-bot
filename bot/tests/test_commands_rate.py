@@ -6,6 +6,7 @@ from asgiref.sync import sync_to_async
 
 from datetime import timedelta
 from decimal import Decimal
+from unittest.mock import patch
 
 from api.assessment.models import Media
 from api.assessment.tests.factories import AssessmentFactory, MediaFactory
@@ -137,3 +138,9 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
 
         self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once_with(content=self.cog.message_rate_no_media)
+
+    @patch('bot.cog.close_old_connections')
+    def test__assessment_cog__interaction_check(self, close_mock):
+        result = self.cog.interaction_check(self.interaction)
+        self.assertTrue(result)
+        close_mock.assert_called_once()

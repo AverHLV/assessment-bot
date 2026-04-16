@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.db import close_old_connections
 from django.db.models import QuerySet
 
 import discord
@@ -12,6 +13,10 @@ from bot.thinking import ThinkingRegistry, thinking_registry
 
 class BaseView(discord.ui.View, metaclass=ABCMeta):
     thinking: ThinkingRegistry = thinking_registry
+
+    async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
+        close_old_connections()
+        return await super().interaction_check(interaction)
 
     async def on_error(self, interaction: discord.Interaction, error: Exception, item: discord.ui.Item, /) -> None:
         from bot.bot import AssessmentBot
