@@ -139,7 +139,7 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
         self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once_with(content=self.cog.message_rate_no_media)
 
-    @patch('bot.cog.close_old_connections')
+    @patch('bot.cog.close_all_db_connections')
     def test__assessment_cog__interaction_check(self, close_mock):
         result = self.cog.interaction_check(self.interaction)
         self.assertTrue(result)

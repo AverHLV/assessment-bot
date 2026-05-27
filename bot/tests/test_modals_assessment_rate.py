@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from asgiref.sync import async_to_sync
 
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from api.assessment.models import Assessment, Media
 from api.assessment.tests.factories import MediaFactory
@@ -117,7 +117,7 @@ class AssessmentModalTestCase(CogBaseTestCase):
         expected_error = 'Value must be an integer or end with .5.'
         self.assertIn(expected_error, msg)
 
-    @patch('bot.modals.base.close_old_connections')
+    @patch('bot.modals.base.aclose_all_db_connections', new_callable=AsyncMock)
     @async_to_sync
     async def test__assessment_modal__interaction_check(self, close_mock):
         modal = self.modal_class(user=self.user, media=self.media)

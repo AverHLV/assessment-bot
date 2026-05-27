@@ -3,7 +3,7 @@ from django.utils import timezone
 from asgiref.sync import async_to_sync, sync_to_async
 
 from datetime import timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from api.assessment.tests.factories import AssessmentFactory
 from api.llm.clients import AsyncOpenRouterClient
@@ -38,7 +38,7 @@ class MessageCogTestCase(CogWithCommandsBaseTestCase):
             self.message_history.append(previous_message)
 
     @patch('bot.messages.run_create_completion')
-    @patch('bot.cog.BaseCog.close_old_db_connections')
+    @patch('bot.messages.aclose_all_db_connections', new_callable=AsyncMock)
     @async_to_sync
     async def test__message_cog__on_message(self, close_mock, completion_mock):
         self.message.channel.typing = get_async_context_manager_mock()
@@ -68,7 +68,7 @@ class MessageCogTestCase(CogWithCommandsBaseTestCase):
         self.message.channel.history.assert_called_once_with(limit=5, before=self.message)
         self.message.reply.assert_called_once_with(completion_mock.return_value)
 
-    @patch('bot.cog.BaseCog.close_old_db_connections')
+    @patch('bot.messages.aclose_all_db_connections', new_callable=AsyncMock)
     @async_to_sync
     async def test__message_cog__on_message__not_mentioned(self, close_mock):
         self.message.mentions = []
