@@ -2,11 +2,11 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 import factory
-from asgiref.sync import sync_to_async
+from asgiref.sync import async_to_sync, sync_to_async
 
 from datetime import timedelta
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from api.assessment.models import Media
 from api.assessment.tests.factories import AssessmentFactory, MediaFactory
@@ -139,8 +139,9 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
         self.assert_thinking(self.interaction)
         self.interaction.edit_original_response.assert_called_once_with(content=self.cog.message_rate_no_media)
 
-    @patch('bot.cog.close_all_db_connections')
-    def test__assessment_cog__interaction_check(self, close_mock):
-        result = self.cog.interaction_check(self.interaction)
+    @patch('bot.cog.close_all_db_connections', new_callable=AsyncMock)
+    @async_to_sync
+    async def test__assessment_cog__interaction_check(self, close_mock):
+        result = await self.cog.interaction_check(self.interaction)
         self.assertTrue(result)
         close_mock.assert_called_once()

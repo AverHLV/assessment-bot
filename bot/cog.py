@@ -16,8 +16,8 @@ class BaseCog(commands.Cog):
         super().__init__()
         self.bot = bot
 
-    def interaction_check(self, interaction: discord.Interaction, /) -> bool:
-        close_all_db_connections()
+    async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
+        await close_all_db_connections()
         return super().interaction_check(interaction)
 
     async def get_user(self, interaction: discord.Interaction) -> User:

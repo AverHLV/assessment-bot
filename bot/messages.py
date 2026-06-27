@@ -8,7 +8,7 @@ from datetime import timedelta
 
 from api.llm import openrouter_client, run_create_completion
 from bot.cog import BaseCog
-from bot.utils import aclose_all_db_connections
+from bot.utils import close_all_db_connections
 
 User = get_user_model()
 
@@ -24,7 +24,7 @@ class MessageCog(BaseCog):
         if message.author.bot or self.bot.user not in message.mentions:
             return
 
-        await aclose_all_db_connections()
+        await close_all_db_connections()
         async with message.channel.typing():
             user = await self.get_user(message)
             only_fields = 'mark', 'partial', 'media_id', 'media__name', 'media__category_id', 'media__category__name'

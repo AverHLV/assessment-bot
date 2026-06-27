@@ -8,15 +8,10 @@ from abc import ABCMeta, abstractmethod
 
 from bot.modals import BaseFilterModal
 from bot.thinking import ThinkingRegistry, thinking_registry
-from bot.utils import aclose_all_db_connections
 
 
 class BaseView(discord.ui.View, metaclass=ABCMeta):
     thinking: ThinkingRegistry = thinking_registry
-
-    async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
-        await aclose_all_db_connections()
-        return await super().interaction_check(interaction)
 
     async def on_error(self, interaction: discord.Interaction, error: Exception, item: discord.ui.Item, /) -> None:
         from bot.bot import AssessmentBot

@@ -7,15 +7,10 @@ from asgiref.sync import sync_to_async
 from abc import ABCMeta, abstractmethod
 
 from bot.thinking import ThinkingRegistry, thinking_registry
-from bot.utils import aclose_all_db_connections
 
 
 class BaseModal(discord.ui.Modal, metaclass=ABCMeta):
     thinking: ThinkingRegistry = thinking_registry
-
-    async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
-        await aclose_all_db_connections()
-        return await super().interaction_check(interaction)
 
     async def on_error(self, interaction: discord.Interaction, error: Exception, /) -> None:
         from bot.bot import AssessmentBot

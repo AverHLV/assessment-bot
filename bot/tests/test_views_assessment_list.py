@@ -1,7 +1,7 @@
 import factory
-from asgiref.sync import async_to_sync, sync_to_async
+from asgiref.sync import sync_to_async
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock
 
 from api.assessment.models import Assessment, Media
 from api.assessment.tests.factories import AssessmentFactory, MediaFactory
@@ -123,16 +123,6 @@ class MyAssessmentPaginatorTestCase(PaginatorBaseTestCase):
             embed=paginator.get_embed.return_value,
             view=paginator,
         )
-
-    @patch('bot.views.base.aclose_all_db_connections', new_callable=AsyncMock)
-    @async_to_sync
-    async def test__my_assessment_paginator__interaction_check(self, close_mock):
-        paginator = self.get_paginator()
-
-        result = await paginator.interaction_check(self.interaction)
-
-        self.assertTrue(result)
-        close_mock.assert_called_once()
 
     async def test__my_assessment_paginator__on_error(self):
         item = Mock()
