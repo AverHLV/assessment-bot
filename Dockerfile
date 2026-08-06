@@ -45,7 +45,6 @@ USER root
 RUN --mount=type=cache,target=$UV_CACHE_DIR \
     --mount=type=bind,source=uv.lock,target=/app/uv.lock \
     --mount=type=bind,source=pyproject.toml,target=/app/pyproject.toml \
-    --mount=type=bind,source=packages,target=/app/packages \
     uv sync --locked --no-install-project --no-dev
 
 COPY . .
