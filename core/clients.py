@@ -1,4 +1,4 @@
-from httpx import AsyncClient, AsyncHTTPTransport, Response
+from httpx2 import AsyncClient, AsyncHTTPTransport, Response
 
 import json
 import logging

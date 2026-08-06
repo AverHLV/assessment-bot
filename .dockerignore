@@ -6,5 +6,5 @@
 !/static
 !/Dockerfile
 !/manage.py
-!/Pipfile
-!/Pipfile.lock
+!/pyproject.toml
+!/uv.lock

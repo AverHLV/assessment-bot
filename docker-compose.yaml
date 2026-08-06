@@ -20,11 +20,11 @@ services:
     hostname: assessment-bot.service
     ports:
       - ${EXPOSE_APP_PORT:-8000}:8000
-    command: pipenv run start-dev
+    command: uv run --no-sync poe start-dev
 
   bot:
     <<: *base-backend
-    command: pipenv run start-dev-bot
+    command: uv run --no-sync poe start-dev-bot
 
   postgres:
     image: postgres:18.1-alpine

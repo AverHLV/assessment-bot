@@ -182,7 +182,7 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
-        'httpx': {
+        'httpx2': {
             'level': 'WARNING',
         },
     },

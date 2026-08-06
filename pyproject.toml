@@ -1,3 +1,78 @@
+[project]
+name = "assessment-bot"
+description = "Backend for a Discord bot to store assessments of different pieces of art (movies, series, books, etc.)."
+version = "0.1.0"
+requires-python = ">=3.13,<3.14"
+readme = "README.md"
+dependencies = [
+    "django==5.2.17",
+    "django-environ==0.14.0",
+    "discord.py==2.7.1",
+    "pyrankvote==2.0.6",
+    "numpy==2.5.1",
+    "sentry-sdk==2.66.1",
+    "psycopg[binary]==3.3.4",
+    "httpx2==2.9.1",
+    "gunicorn",
+    "whitenoise",
+    "uvloop",
+    "poethepoet==0.48.0",
+]
+
+[dependency-groups]
+dev = [
+    "factory-boy==3.3.3",
+    "coverage",
+    "ruff==0.16.0",
+]
+
+[tool.poe]
+executor = "simple"
+
+[tool.poe.envfile]
+optional = [".env"]
+
+[tool.poe.tasks.start]
+cmd = "gunicorn -c /app/.box/etc/gunicorn.py core.wsgi:application"
+use_exec = true
+
+[tool.poe.tasks.start-dev]
+cmd = "./manage.py runserver 0.0.0.0:8000"
+use_exec = true
+
+[tool.poe.tasks.start-bot]
+cmd = "./manage.py start_bot"
+use_exec = true
+
+[tool.poe.tasks.start-dev-bot]
+cmd = "./manage.py start_bot"
+use_exec = true
+
+[tool.poe.tasks.build]
+cmd = "./manage.py collectstatic --no-input"
+
+[tool.poe.tasks.build-dev]
+cmd = "./manage.py migrate --no-input"
+
+[tool.poe.tasks.test]
+shell = """
+    coverage run ./manage.py test --no-input
+    code=$?
+    coverage report -m
+    exit $code
+"""
+
+[tool.poe.tasks.format]
+shell = """
+    ruff check --fix
+    code=$?
+    ruff format
+    exit $code
+"""
+
+[tool.poe.tasks.migrate]
+cmd = "./manage.py migrate --no-input"
+
 [tool.ruff]
 line-length = 120
 show-fixes = true

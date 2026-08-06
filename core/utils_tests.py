@@ -2,7 +2,7 @@ from django.test import override_settings
 from django.test.runner import DiscoverRunner
 
 import sentry_sdk
-from httpx import Request, Response
+from httpx2 import Request, Response
 
 import logging
 from collections.abc import Callable

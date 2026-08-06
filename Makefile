@@ -35,7 +35,7 @@ container@build:
 	docker compose pull
 	docker compose build --pull
 	docker compose run --rm -u root app sh -c "chown $(RUN_AS_USER):$(RUN_AS_USER) -R /opt/venv/"
-	docker compose run --rm app sh -c "rm -Rf /opt/venv/* && pipenv install --dev"
+	docker compose run --rm app sh -c "rm -Rf /opt/venv/* && uv sync"
 .PHONY: container@build
 
 ## Start containers
@@ -54,7 +54,7 @@ container@restart: container@stop container@start
 
 ## Console
 container@console:
-	docker compose exec app pipenv run bash
+	docker compose exec app uv run --no-sync bash
 .PHONY: container@console
 
 ## Logs
@@ -64,20 +64,20 @@ container@logs:
 
 ## Build (DEV)
 project@build-dev: container@start
-	docker compose run --rm app pipenv run build-dev
+	docker compose run --rm app uv run --no-sync poe build-dev
 .PHONY: project@build-dev
 
 ## Build (PROD)
 project@build: container@start
-	docker compose run --rm app pipenv run build
+	docker compose run --rm app uv run --no-sync poe build
 .PHONY: project@build
 
 ## Run tests
 project@test: container@start
-	docker compose run --rm app pipenv run test
+	docker compose run --rm app uv run --no-sync poe test
 .PHONY: project@test
 
 ## Lint and format code
 project@format:
-	docker compose exec -T app pipenv run format
+	docker compose exec -T app uv run --no-sync poe format
 .PHONY: project@format

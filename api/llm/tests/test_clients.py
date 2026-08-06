@@ -2,7 +2,7 @@ from django.conf import settings
 from django.test import SimpleTestCase
 
 from asgiref.sync import async_to_sync
-from httpx import TimeoutException
+from httpx2 import TimeoutException
 
 from http import HTTPStatus
 from unittest.mock import patch
