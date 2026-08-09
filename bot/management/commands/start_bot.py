@@ -16,8 +16,7 @@ class Command(BaseCommand):
     help = 'Start the Discord bot'
 
     def handle(self, *args, **options):
-        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-        asyncio.run(self.handle_async(), debug=settings.DEBUG)
+        asyncio.run(self.handle_async(), debug=settings.DEBUG, loop_factory=uvloop.new_event_loop)
 
     async def handle_async(self, delay: int = 10) -> None:
         logger.info('Starting the bot...')
