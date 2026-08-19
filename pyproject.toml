@@ -26,6 +26,25 @@ dev = [
     "ruff==0.16.0",
 ]
 
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "*/tests/*",
+    "*/tests.py",
+    "*/migrations/*",
+    "core/asgi.py",
+    "core/wsgi.py",
+    "manage.py",
+]
+
+[tool.coverage.report]
+exclude_also = [
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "@(abc\\.)?abstractmethod",
+]
+
 [tool.poe]
 executor = "simple"
 
