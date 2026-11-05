@@ -16,6 +16,8 @@ User = get_user_model()
 
 
 class MediaModal(BaseCreateModal):
+    message_move_to_assessment = 'Move to assessment'
+
     name = discord.ui.TextInput(
         label='Name',
         min_length=1,
@@ -42,6 +44,11 @@ class MediaModal(BaseCreateModal):
 
         self.user = user
         self.media_category = media_category
+        self.move_to_assessment = None
+
+        if self.user.is_staff:
+            self.move_to_assessment = discord.ui.Checkbox(default=True)
+            self.add_item(discord.ui.Label(text=self.message_move_to_assessment, component=self.move_to_assessment))
 
     def get_form(self) -> forms.ModelForm:
         form = super().get_form()
@@ -49,6 +56,11 @@ class MediaModal(BaseCreateModal):
         return form
 
     async def save(self, form: forms.ModelForm) -> Media:
+        form.instance.assessment_status = (
+            Media.AssessmentStatus.IN_PROGRESS
+            if self.user.is_staff and self.move_to_assessment is not None and self.move_to_assessment.value
+            else Media.AssessmentStatus.INITIAL
+        )
         form.instance.creator_id = self.user.id
         await form.instance.populate_meta_mark(save=False)
         return await super().save(form)

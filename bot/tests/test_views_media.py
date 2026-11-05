@@ -27,7 +27,7 @@ class MediaCategorySelectTestCase(TestCase):
         self.interaction.response.send_modal.assert_called_once()
         args, _ = self.interaction.response.send_modal.call_args
         modal = args[0]
-        self.assertEqual(modal.user, self.user)
+        self.assertIs(modal.user, self.user)
         self.assertEqual(modal.media_category.id, category.id)
         self.assertIn(category.name.lower(), modal.title)
         values_mock.get.assert_called_once()
