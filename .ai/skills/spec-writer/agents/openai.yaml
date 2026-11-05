@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spec Writer"
+  short_description: "Create validated development task specs"
+  default_prompt: "Use $spec-writer to turn this task description into a validated development specification."

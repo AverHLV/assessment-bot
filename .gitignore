@@ -115,3 +115,9 @@ cmake-build-*/
 *.iws
 
 /.env
+
+# Agents
+/.ai/plans/*
+!/.ai/plans/README.md
+/.ai/specs/*
+!/.ai/specs/README.md

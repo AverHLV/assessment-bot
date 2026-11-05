@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verifier"
+  short_description: "Verify SDD implementation and test coverage"
+  default_prompt: "Use $verifier to compare an SDD spec with non-committed implementation and test changes."

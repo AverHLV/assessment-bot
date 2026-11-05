@@ -1,0 +1,57 @@
+# Version control internals
+/.git/
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build and packaging artifacts
+/build/
+/dist/
+*.egg-info/
+/.eggs/
+/wheels/
+
+# Test and coverage artifacts
+/.coverage
+/.coverage.*
+/htmlcov/
+/coverage.xml
+
+# Django-generated files
+/static/
+/media/
+*.mo
+
+# Linter and type-checker caches
+/.ruff_cache/
+/.mypy_cache/
+/.pytype/
+/.pyre/
+
+# Local virtual environments
+/.venv/
+/venv/
+/env/
+/ENV/
+/__pypackages__/
+
+# IDE and editor files
+/.idea/
+*.iws
+
+# Operating-system files
+*.DS_Store
+Thumbs.db
+
+# Logs and temporary output
+*.log
+*.tmp
+*.temp
+
+# Secrets and local configuration
+/.env
+
+# Human-only documentation
+/README.md

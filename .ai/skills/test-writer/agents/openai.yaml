@@ -1,0 +1,4 @@
+interface:
+  display_name: "Test Writer"
+  short_description: "Write spec-driven Django tests"
+  default_prompt: "Use $test-writer to write and run tests for the selected implemented specification."

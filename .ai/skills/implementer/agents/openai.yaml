@@ -1,0 +1,4 @@
+interface:
+  display_name: "Implementer"
+  short_description: "Implement a spec-driven task"
+  default_prompt: "Use $implementer to implement the selected specification, following its plan when provided."
