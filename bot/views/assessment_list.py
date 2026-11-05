@@ -7,6 +7,8 @@ from bot.modals import MyAssessmentFilterModal
 from bot.views.base import BaseFilterPaginator
 from bot.views.media_list import MediaFilterModal
 
+ASSESSMENT_REVIEW_DISPLAY_LIMIT = 300
+
 
 class AssessmentPaginator(BaseFilterPaginator):
     modal_class = MediaFilterModal
@@ -41,6 +43,11 @@ class MyAssessmentPaginator(BaseFilterPaginator):
             if assessment.media.meta_mark is not None:
                 value = f'{value}Meta mark - *{assessment.media.meta_mark}*\n'
             value = f'{value}[Link]({assessment.media.url})\n{assessment.media.description}'
+            if assessment.review:
+                review = assessment.review
+                if len(review) > ASSESSMENT_REVIEW_DISPLAY_LIMIT:
+                    review = f'{review[: ASSESSMENT_REVIEW_DISPLAY_LIMIT - 3]}...'
+                value = f'{value}\n{review}'
             value = self.strip_embed_item_value(value)
 
             embed.add_field(name=name, value=value, inline=False)

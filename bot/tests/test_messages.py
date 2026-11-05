@@ -5,6 +5,7 @@ from asgiref.sync import async_to_sync, sync_to_async
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
+from api.assessment.models import Assessment
 from api.assessment.tests.factories import AssessmentFactory
 from api.llm.clients import AsyncOpenRouterClient
 from bot import messages
@@ -45,7 +46,11 @@ class MessageCogTestCase(CogWithCommandsBaseTestCase):
         self.message.channel.history = get_async_iterator_mock(self.message_history)
         completion_mock.return_value = 'response content'
 
-        assessment, _ = await sync_to_async(AssessmentFactory.create_batch)(size=2, user=self.user)
+        assessment, _ = await sync_to_async(AssessmentFactory.create_batch)(
+            size=2,
+            user=self.user,
+            review='PRIVATE_REVIEW_SENTINEL',
+        )
 
         await self.cog.on_message(self.message)
 
@@ -59,6 +64,7 @@ class MessageCogTestCase(CogWithCommandsBaseTestCase):
         self.assertIn(assessment.media.category.name, prompt)
         self.assertIn(self.user.username, prompt)
         self.assertIn(self.message.content, prompt)
+        self.assertNotIn('PRIVATE_REVIEW_SENTINEL', prompt)
         previous_message = self.message_history[0]
         self.assertIn(previous_message.author.name, prompt)
         self.assertIn(previous_message.content, prompt)
@@ -77,3 +83,31 @@ class MessageCogTestCase(CogWithCommandsBaseTestCase):
 
         close_mock.assert_not_called()
         self.message.channel.typing.assert_not_called()
+
+    @patch('bot.messages.run_create_completion')
+    @patch('bot.messages.close_all_db_connections', new_callable=AsyncMock)
+    def test__message_cog__review_does_not_change_prompt(self, close_mock, completion_mock):
+        self.message.channel.typing = get_async_context_manager_mock()
+        completion_mock.return_value = 'response content'
+        assessments = AssessmentFactory.create_batch(size=2, user=self.user, review='PRIVATE_REVIEW_SENTINEL')
+        self.message.channel.history = get_async_iterator_mock(self.message_history)
+
+        with self.assertNumQueries(2):
+            async_to_sync(self.cog.on_message)(self.message)
+
+        prompt_with_review = completion_mock.call_args.args[1]
+        self.assertNotIn('PRIVATE_REVIEW_SENTINEL', prompt_with_review)
+        for assessment in assessments:
+            self.assertIn(assessment.media.name, prompt_with_review)
+        self.message.reply.assert_awaited_once_with('response content')
+        Assessment.objects.filter(pk__in=[assessment.pk for assessment in assessments]).update(review='')
+        self.message.reset_mock()
+        self.message.channel.history = get_async_iterator_mock(self.message_history)
+        completion_mock.reset_mock()
+
+        with self.assertNumQueries(2):
+            async_to_sync(self.cog.on_message)(self.message)
+
+        self.assertEqual(prompt_with_review, completion_mock.call_args.args[1])
+        self.message.reply.assert_awaited_once_with('response content')
+        completion_mock.assert_awaited_once()

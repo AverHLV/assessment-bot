@@ -27,6 +27,7 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
             media__create_dt=factory.Iterator((current_time, current_time - timedelta(hours=1))),
             media__assessment_status=Media.AssessmentStatus.COMPLETED,
             media__meta_mark=factory.Iterator((Decimal('5.7'), None)),
+            review='Private review sentinel',
         )
 
         await self.cog.rates.callback(self.cog, self.interaction)
@@ -46,6 +47,7 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
             self.assertIn(assessment.media.category.name, field.name)
             self.assertIn(assessment.user.username, field.value)
             self.assertIn(str(assessment.mark), field.value)
+            self.assertNotIn(assessment.review, field.value)
         self.assertIn(str(assessments[0].media.meta_mark), embed_fields[0].value)
         self.assertIn(assessments[1].partial, embed_fields[1].value)
 
@@ -65,6 +67,7 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
             size=len(media),
             create_dt=factory.Iterator((current_time, current_time - timedelta(hours=1))),
             partial=factory.Iterator(('', 'partial')),
+            review='Great pacing',
             media=factory.Iterator(media),
             user=self.user,
         )
@@ -88,6 +91,7 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
             self.assertIn(str(assessment.mark), field.name)
             self.assertIn(assessment.media.category.name, field.value)
             self.assertIn(assessment.media.url, field.value)
+            self.assertTrue(field.value.endswith('\nGreat pacing'))
         self.assertIn(str(assessments[0].media.meta_mark), embed_fields[0].value)
         self.assertIn(assessments[1].partial, embed_fields[1].value)
 
@@ -103,7 +107,6 @@ class AssessmentCogTestCase(CogWithCommandsBaseTestCase):
         media = await sync_to_async(MediaFactory.create_batch)(
             size=3,
             assessment_status=Media.AssessmentStatus.IN_PROGRESS,
-            assessment_until_dt=timezone.now() + timedelta(days=1),
         )
         await sync_to_async(AssessmentFactory.create)(media=media[-1], user=self.user)
         selected_media = media[:-1]

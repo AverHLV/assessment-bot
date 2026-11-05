@@ -28,7 +28,7 @@ class AssessmentCog(BaseCog):
             await interaction.edit_original_response(content=self.message_rates_no_assessments)
             return
 
-        assessments_only_fields = 'mark', 'partial', 'user_id', 'user__username'
+        assessments_only_fields = 'mark', 'partial', 'media_id', 'user_id', 'user__username'
         assessments = (
             Assessment.objects.select_related('user').only(*assessments_only_fields).order_by('user__username')
         )
@@ -56,6 +56,8 @@ class AssessmentCog(BaseCog):
         only_fields = (
             'mark',
             'partial',
+            'review',
+            'user_id',
             'media_id',
             'media__name',
             'media__url',

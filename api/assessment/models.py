@@ -58,7 +58,6 @@ class Media(TimeStamped):
     url = models.URLField(help_text='URL that describes the media, such as an IMDb page.')
     description = models.TextField(blank=True, help_text='Description for quick media memorization.')
     assessment_status = models.CharField(choices=AssessmentStatus, default=AssessmentStatus.INITIAL)
-    assessment_until_dt = models.DateTimeField(blank=True, null=True)
     meta_mark = models.DecimalField(
         max_digits=3,
         decimal_places=1,
@@ -115,6 +114,7 @@ class Assessment(models.Model):
         blank=True,
         help_text='Indicates that the media has been partially reviewed, for example, 5 / 10 episodes of an anime.',
     )
+    review = models.CharField(max_length=1000, blank=True, default='', help_text='Optional comment on your mark.')
     create_dt = models.DateTimeField(auto_now_add=True)
 
     media = models.ForeignKey(Media, on_delete=models.PROTECT, related_name='assessments')

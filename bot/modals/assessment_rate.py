@@ -13,6 +13,7 @@ from bot.modals.media import MediaFilterModal
 
 ASSESSMENT_MARK_FIELD = Assessment._meta.get_field('mark')
 ASSESSMENT_PARTIAL_FIELD = Assessment._meta.get_field('partial')
+ASSESSMENT_REVIEW_FIELD = Assessment._meta.get_field('review')
 
 User = get_user_model()
 
@@ -29,6 +30,13 @@ class AssessmentModal(BaseCreateModal):
         label='If partial',
         placeholder=ASSESSMENT_PARTIAL_FIELD.help_text,
         max_length=ASSESSMENT_PARTIAL_FIELD.max_length,
+        style=discord.TextStyle.long,
+    )
+    review = discord.ui.TextInput(
+        required=False,
+        label='Review',
+        placeholder=ASSESSMENT_REVIEW_FIELD.help_text,
+        max_length=ASSESSMENT_REVIEW_FIELD.max_length,
         style=discord.TextStyle.long,
     )
 

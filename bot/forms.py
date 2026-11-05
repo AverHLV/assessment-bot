@@ -12,4 +12,4 @@ class MediaForm(forms.ModelForm):
 class AssessmentForm(forms.ModelForm):
     class Meta:
         model = Assessment
-        fields = 'mark', 'partial'
+        fields = 'mark', 'partial', 'review'

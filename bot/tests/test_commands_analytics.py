@@ -18,6 +18,7 @@ User = get_user_model()
 
 class AnalyticsCogTestCase(CogWithCommandsBaseTestCase):
     cog_class = commands.AnalyticsCog
+    private_review = 'PRIVATE_REVIEW_SENTINEL'
 
     @classmethod
     def setUpTestData(cls):
@@ -38,6 +39,8 @@ class AnalyticsCogTestCase(CogWithCommandsBaseTestCase):
         self.discord_user.id = self.users[-1].external_id
 
     def assert_compare_view_embed(self, embed: discord.Embed, prompt: str, expected_users: list[User]) -> None:
+        self.assertNotIn(self.private_review, prompt)
+        self.assertNotIn(self.private_review, str(embed.to_dict()))
         embed_fields = embed.fields
         self.assertEqual(len(embed_fields), 5)
         correlation_field = embed_fields[1]
@@ -75,6 +78,7 @@ class AnalyticsCogTestCase(CogWithCommandsBaseTestCase):
             mark=factory.Iterator(range(len(self.media) * len(self.users))),
             media=factory.Iterator(self.media),
             user=factory.Iterator((self.users[0], self.users[0], self.users[1], self.users[1])),
+            review=self.private_review,
         )
 
         await self.cog.compare.callback(self.cog, self.interaction, self.discord_user)
@@ -148,6 +152,7 @@ class AnalyticsCogTestCase(CogWithCommandsBaseTestCase):
             mark=factory.Iterator(range(len(self.media))),
             media=factory.Iterator(self.media),
             user=self.user,
+            review=self.private_review,
         )
 
         await self.cog.compare_meta.callback(self.cog, self.interaction)

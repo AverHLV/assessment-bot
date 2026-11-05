@@ -1,5 +1,4 @@
 from django.db import models
-from django.utils import timezone
 
 
 class MediaCategoryQuerySet(models.QuerySet):
@@ -21,11 +20,10 @@ class MediaQuerySet(models.QuerySet):
         return (
             self.filter(
                 assessment_status=self.model.AssessmentStatus.IN_PROGRESS,
-                assessment_until_dt__gte=timezone.now(),
                 **kwargs,
             )
             .exclude(assessments__user_id=user_id)
-            .order_by('assessment_until_dt', 'name')
+            .order_by('name')
         )
 
 

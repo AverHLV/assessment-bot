@@ -1,7 +1,4 @@
 from django.contrib import admin
-from django.utils import timezone
-
-from datetime import timedelta
 
 from api.assessment import models
 from core.admin import DictionaryAdmin
@@ -14,12 +11,9 @@ class AssessmentDictionaryAdmin(DictionaryAdmin):
     pass
 
 
-@admin.action(description='Start assessment for the selected media (1 week)')
-def start_assessment_for_1_week(_modeladmin, _request, queryset):
-    queryset.update(
-        assessment_status=queryset.model.AssessmentStatus.IN_PROGRESS,
-        assessment_until_dt=timezone.now() + timedelta(days=8),
-    )
+@admin.action(description='Start assessment for the selected media')
+def start_assessment(_modeladmin, _request, queryset):
+    queryset.update(assessment_status=queryset.model.AssessmentStatus.IN_PROGRESS)
 
 
 @admin.action(description='Finish assessment for the selected media')
@@ -35,7 +29,6 @@ class MediaAdmin(admin.ModelAdmin):
         'create_dt',
         'update_dt',
         'assessment_status',
-        'assessment_until_dt',
         'meta_mark',
         'category',
         'display_creator',
@@ -46,7 +39,7 @@ class MediaAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     readonly_fields = 'id', 'create_dt', 'update_dt'
     ordering = ('-create_dt',)
-    actions = start_assessment_for_1_week, finish_assessment
+    actions = start_assessment, finish_assessment
 
     def display_creator(self, obj: models.Media) -> str:
         return obj.creator.username
@@ -54,20 +47,22 @@ class MediaAdmin(admin.ModelAdmin):
     display_creator.short_description = 'Creator'
 
     def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if not request.resolver_match or request.resolver_match.url_name != 'assessment_media_changelist':
+            return queryset
+
         only_fields = (
             'create_dt',
             'update_dt',
             'name',
-            'url',
-            'description',
             'assessment_status',
-            'assessment_until_dt',
+            'meta_mark',
             'category_id',
             'category__name',
             'creator_id',
             'creator__username',
         )
-        return super().get_queryset(request).only(*only_fields)
+        return queryset.only(*only_fields)
 
 
 @admin.register(models.Assessment)
@@ -90,8 +85,12 @@ class AssessmentAdmin(admin.ModelAdmin):
     display_user.short_description = 'User'
 
     def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if not request.resolver_match or request.resolver_match.url_name != 'assessment_assessment_changelist':
+            return queryset
+
         only_fields = 'mark', 'partial', 'create_dt', 'media_id', 'user_id', 'media__name', 'user__username'
-        return super().get_queryset(request).only(*only_fields)
+        return queryset.only(*only_fields)
 
 
 class VoteInline(admin.TabularInline):

@@ -27,7 +27,15 @@ class MessageCog(BaseCog):
         await close_all_db_connections()
         async with message.channel.typing():
             user = await self.get_user(message)
-            only_fields = 'mark', 'partial', 'media_id', 'media__name', 'media__category_id', 'media__category__name'
+            only_fields = (
+                'mark',
+                'partial',
+                'user_id',
+                'media_id',
+                'media__name',
+                'media__category_id',
+                'media__category__name',
+            )
             assessments = (
                 user.assessments.select_related('media', 'media__category')
                 .only(*only_fields)
