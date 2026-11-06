@@ -30,7 +30,7 @@ class MediaSelectTestCase(CogWithCommandsBaseTestCase):
         self.assertEqual(modal.media.description, 'Selected story description')
         self.assertEqual(modal.media.category.name, media.category.name)
         self.assertIn(media.name, modal.title)
-        self.assertEqual(modal.children[-1].label, 'Review')
+        self.assertEqual(modal.children[-1].text, 'Review')
         values_mock.get.assert_called_once()
 
     @patch('discord.ui.select.selected_values')

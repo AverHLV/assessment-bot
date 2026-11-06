@@ -37,6 +37,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
 
+  mcp-inspector:
+    image: ghcr.io/modelcontextprotocol/inspector:2.14.0
+    network_mode: host
+    environment:
+      HOST: 127.0.0.1
+      CLIENT_PORT: ${EXPOSE_MCP_INSPECTOR_PORT:-6274}
+      MCP_AUTO_OPEN_ENABLED: "false"
+      DANGEROUSLY_OMIT_AUTH: "true"
+
 volumes:
   venv_data:
     driver: local

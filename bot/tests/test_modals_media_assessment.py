@@ -33,16 +33,22 @@ class MediaModalAssessmentTestCase(MediaModalBaseTestCase):
         self.assertEqual(modal.children, [modal.name, modal.url, modal.description])
         self.assertEqual(modal.title, f'Add a future {self.category.name.lower()}')
         components = modal.to_dict()['components']
-        self.assertEqual([row['components'][0]['label'] for row in components], ['Name', 'URL', 'Description'])
-        self.assertEqual([field.required for field in modal.children], [True, True, False])
-        self.assertEqual([field.min_length for field in modal.children], [1, 1, None])
+        self.assertEqual([item['label'] for item in components], ['Name', 'URL', 'Description'])
+        self.assertEqual([item['type'] for item in components], [18, 18, 18])
+        for item in components:
+            self.assertEqual(item['component']['type'], 4)
+            self.assertIsNone(item['component']['label'])
+
+        fields = [label.component for label in modal.children]
+        self.assertEqual([field.required for field in fields], [True, True, False])
+        self.assertEqual([field.min_length for field in fields], [1, 1, None])
         self.assertEqual(
-            [field.max_length for field in modal.children],
+            [field.max_length for field in fields],
             [Media._meta.get_field('name').max_length, Media._meta.get_field('url').max_length, None],
         )
-        self.assertEqual(modal.url.placeholder, Media._meta.get_field('url').help_text)
-        self.assertEqual(modal.description.placeholder, Media._meta.get_field('description').help_text)
-        self.assertEqual(modal.description.style, discord.TextStyle.long)
+        self.assertEqual(modal.url.component.placeholder, Media._meta.get_field('url').help_text)
+        self.assertEqual(modal.description.component.placeholder, Media._meta.get_field('description').help_text)
+        self.assertEqual(modal.description.component.style, discord.TextStyle.long)
         self.assertEqual(len(components), 3)
 
     def test__media_modal__staff_default_creates_open_media(self):

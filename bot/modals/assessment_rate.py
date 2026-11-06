@@ -19,25 +19,31 @@ User = get_user_model()
 
 
 class AssessmentModal(BaseCreateModal):
-    mark = discord.ui.TextInput(
-        label='Mark',
-        placeholder=ASSESSMENT_MARK_FIELD.help_text,
-        min_length=1,
-        max_length=3,
+    mark = discord.ui.Label(
+        text='Mark',
+        component=discord.ui.TextInput(
+            placeholder=ASSESSMENT_MARK_FIELD.help_text,
+            min_length=1,
+            max_length=3,
+        ),
     )
-    partial = discord.ui.TextInput(
-        required=False,
-        label='If partial',
-        placeholder=ASSESSMENT_PARTIAL_FIELD.help_text,
-        max_length=ASSESSMENT_PARTIAL_FIELD.max_length,
-        style=discord.TextStyle.long,
+    partial = discord.ui.Label(
+        text='If partial',
+        component=discord.ui.TextInput(
+            required=False,
+            placeholder=ASSESSMENT_PARTIAL_FIELD.help_text,
+            max_length=ASSESSMENT_PARTIAL_FIELD.max_length,
+            style=discord.TextStyle.long,
+        ),
     )
-    review = discord.ui.TextInput(
-        required=False,
-        label='Review',
-        placeholder=ASSESSMENT_REVIEW_FIELD.help_text,
-        max_length=ASSESSMENT_REVIEW_FIELD.max_length,
-        style=discord.TextStyle.long,
+    review = discord.ui.Label(
+        text='Review',
+        component=discord.ui.TextInput(
+            required=False,
+            placeholder=ASSESSMENT_REVIEW_FIELD.help_text,
+            max_length=ASSESSMENT_REVIEW_FIELD.max_length,
+            style=discord.TextStyle.long,
+        ),
     )
 
     form_class = AssessmentForm
@@ -65,4 +71,4 @@ class AssessmentModal(BaseCreateModal):
 
 class MyAssessmentFilterModal(MediaFilterModal):
     async def filter_items_queryset(self, items_queryset: QuerySet[Assessment]) -> QuerySet[Assessment]:
-        return items_queryset.filter(media__name__icontains=self.media_name.value)
+        return items_queryset.filter(media__name__icontains=self.media_name.component.value)

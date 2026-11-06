@@ -23,7 +23,7 @@ def get_media_modal(user, category):
 def media_modal_payload(modal, *, checked=None, name=MEDIA_NAME, url=MEDIA_URL):
     values = (name, url, MEDIA_DESCRIPTION)
     components = [
-        {'type': 1, 'components': [{'type': 4, 'custom_id': field.custom_id, 'value': value}]}
+        {'type': 18, 'component': {'type': 4, 'custom_id': field.component.custom_id, 'value': value}}
         for field, value in zip((modal.name, modal.url, modal.description), values, strict=True)
     ]
     if modal.move_to_assessment is not None:

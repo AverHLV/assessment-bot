@@ -15,6 +15,10 @@ class MyRatesBaseTestCase(CogWithCommandsBaseTestCase):
         self.assertEqual(response['content'], self.cog.message_my_rates)
         return response
 
+    @async_to_sync
+    async def click_paginator_button(self, button):
+        await button.callback(self.interaction)
+
     def assert_review_field(self, field, assessment, expected_review):
         media = assessment.media
         self.assertEqual(field.name, f'{media.name} - *{assessment.mark:.1f}*')

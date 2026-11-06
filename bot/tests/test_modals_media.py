@@ -48,8 +48,8 @@ class MediaModalTestCase(CogBaseTestCase):
     @async_to_sync
     async def test__media_modal__on_submit(self, populate_mock):
         modal = self.modal_class(user=self.user, media_category=self.category)
-        modal.name._value = self.name
-        modal.url._value = self.url
+        modal.name.component._value = self.name
+        modal.url.component._value = self.url
 
         await modal.on_submit(self.interaction)
 
@@ -69,9 +69,9 @@ class MediaModalTestCase(CogBaseTestCase):
     @async_to_sync
     async def test__media_modal__on_submit__description(self, populate_mock):
         modal = self.modal_class(user=self.user, media_category=self.category)
-        modal.name._value = self.name
-        modal.url._value = self.url
-        modal.description._value = self.description
+        modal.name.component._value = self.name
+        modal.url.component._value = self.url
+        modal.description.component._value = self.description
 
         await modal.on_submit(self.interaction)
 
@@ -93,8 +93,8 @@ class MediaModalTestCase(CogBaseTestCase):
         await sync_to_async(MediaFactory.create)(name=self.name, category=self.category)
 
         modal = self.modal_class(user=self.user, media_category=self.category)
-        modal.name._value = self.name
-        modal.url._value = self.url
+        modal.name.component._value = self.name
+        modal.url.component._value = self.url
 
         await modal.on_submit(self.interaction)
 

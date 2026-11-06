@@ -23,7 +23,20 @@ class AssessmentPaginatorTestCase(PaginatorBaseTestCase):
         paginator.items_queryset_base = Media.objects.all()
 
         modal = paginator.modal_class(paginator=paginator)
-        modal.media_name._value = media.name[:5].upper()
+        modal._refresh(
+            self.interaction,
+            [
+                {
+                    'type': 18,
+                    'component': {
+                        'type': 4,
+                        'custom_id': modal.media_name.component.custom_id,
+                        'value': media.name[:5].upper(),
+                    },
+                },
+            ],
+            {},
+        )
         await modal.on_submit(self.interaction)
 
         self.assert_thinking(self.interaction, edit=True)
@@ -144,7 +157,7 @@ class MyAssessmentPaginatorTestCase(PaginatorBaseTestCase):
         paginator.items_queryset_base = Assessment.objects.all()
 
         modal = paginator.modal_class(paginator=paginator)
-        modal.media_name._value = self.assessment.media.name[:5].upper()
+        modal.media_name.component._value = self.assessment.media.name[:5].upper()
         await modal.on_submit(self.interaction)
 
         self.assert_thinking(self.interaction, edit=True)

@@ -48,7 +48,7 @@ class AssessmentModalTestCase(CogBaseTestCase):
     async def test__assessment_modal__on_submit(self, completion_mock):
         completion_mock.return_value = self.completion_response
         modal = self.modal_class(user=self.user, media=self.media)
-        modal.mark._value = self.mark
+        modal.mark.component._value = self.mark
 
         await modal.on_submit(self.interaction)
 
@@ -74,20 +74,25 @@ class AssessmentModalTestCase(CogBaseTestCase):
         )
 
     @patch('bot.modals.assessment_rate.run_create_completion')
-    @async_to_sync
-    async def test__assessment_modal__on_submit__partial(self, completion_mock):
+    def test__assessment_modal__on_submit__partial(self, completion_mock):
         completion_mock.return_value = self.completion_response
         modal = self.modal_class(user=self.user, media=self.media)
-        modal.mark._value = self.mark
-        modal.partial._value = self.partial
+        review = 'A memorable story'
+        components = [
+            {'type': 18, 'component': {'type': 4, 'custom_id': field.component.custom_id, 'value': value}}
+            for field, value in zip(modal.children, (self.mark, self.partial, review), strict=True)
+        ]
 
-        await modal.on_submit(self.interaction)
+        with self.assertNumQueries(1):
+            modal._refresh(self.interaction, components, {})
+            async_to_sync(modal.on_submit)(self.interaction)
 
         self.assert_thinking(self.interaction, edit=True)
         self.assert_thinking_with_loop(self.interaction)
-        assessment = await self.media.assessments.filter(user_id=self.user.id).afirst()
+        assessment = self.media.assessments.filter(user_id=self.user.id).first()
         self.assertIsNotNone(assessment)
         self.assert_assessment_instance(assessment, self.user, self.media, self.mark, partial=self.partial)
+        self.assertEqual(assessment.review, review)
 
         completion_mock.assert_called_once()
         args, _ = completion_mock.call_args
@@ -100,7 +105,7 @@ class AssessmentModalTestCase(CogBaseTestCase):
     async def test__assessment_modal__on_submit__errors__validation_error(self, completion_mock):
         self.mark = '4.3'
         modal = self.modal_class(user=self.user, media=self.media)
-        modal.mark._value = self.mark
+        modal.mark.component._value = self.mark
 
         await modal.on_submit(self.interaction)
 

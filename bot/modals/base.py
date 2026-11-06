@@ -40,7 +40,7 @@ class BaseCreateModal(BaseModal):
     form_valid_message = 'Saved. I sealed it carefully in the archives.'
 
     def get_form(self) -> forms.ModelForm:
-        data = {field: getattr(self, field).value for field in self.__modal_children_items__}
+        data = {field: getattr(self, field).component.value for field in self.__modal_children_items__}
         return self.form_class(data=data)
 
     async def save(self, form: forms.ModelForm):

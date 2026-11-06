@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     # own
     'api.assessment',
     'api.llm',
+    'api.mcp',
     'api.user',
     'bot',
 ]
@@ -36,7 +37,6 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'core.middleware.HealthCheckMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -69,6 +69,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'core.wsgi.application'
+ASGI_APPLICATION = 'core.asgi.application'
 
 
 # Feature vars
@@ -102,7 +103,7 @@ SESSION_COOKIE_AGE = env.int('APP_SESSION_AGE', default=3600 * 10)
 # Storages
 
 STORAGES = {
-    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
+    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
 }
 
 
@@ -138,6 +139,20 @@ OPENROUTER_MODEL = env('APP_OPENROUTER_MODEL', default='model')
 
 OMDB_URL = env('APP_OMDB_URL', default='https://omdb')
 OMDB_API_KEY = env('APP_OMDB_API_KEY', default='key')
+
+PUBLIC_BASE_URL = env('APP_PUBLIC_BASE_URL', default='')
+DISCORD_CLIENT_ID = env('APP_DISCORD_CLIENT_ID', default='')
+DISCORD_CLIENT_SECRET = env('APP_DISCORD_CLIENT_SECRET', default='')
+MCP_REDIRECT_URI_HOSTS = env.list(
+    'APP_MCP_REDIRECT_URI_HOSTS',
+    default=[
+        'claude.ai',
+        'claude.com',
+        'chatgpt.com',
+        'grok.com',
+    ],
+)
+MCP_INSPECTOR_PORT = env.int('EXPOSE_MCP_INSPECTOR_PORT', default=6274)
 
 
 # Logging

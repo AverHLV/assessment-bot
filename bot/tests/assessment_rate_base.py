@@ -19,9 +19,9 @@ class AssessmentReviewBaseTestCase(CogWithCommandsBaseTestCase):
 
     def get_modal(self, review=None):
         modal = AssessmentModal(user=self.user, media=self.media)
-        modal.mark._value = '8'
+        modal.mark.component._value = '8'
         if review is not None:
-            modal.review._value = review
+            modal.review.component._value = review
         return modal
 
     def submit(self, modal, queries=1):

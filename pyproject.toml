@@ -6,16 +6,18 @@ requires-python = ">=3.13,<3.14"
 readme = "README.md"
 dependencies = [
     "django==5.2.17",
+    "starlette==1.10.0",
     "django-environ==0.14.0",
     "discord.py==2.7.1",
+    "mcp==2.3.0",
     "pyrankvote==2.0.6",
     "numpy==2.5.1",
     "sentry-sdk==2.66.1",
     "psycopg[binary]==3.3.4",
-    "httpx2==2.9.1",
+    "httpx2==2.16.0",
     "gunicorn",
-    "whitenoise",
-    "uvloop",
+    "uvicorn[standard]",
+    "uvicorn-worker",
     "poethepoet==0.48.0",
 ]
 
@@ -52,11 +54,11 @@ executor = "simple"
 optional = [".env"]
 
 [tool.poe.tasks.start]
-cmd = "gunicorn -c /app/.box/etc/gunicorn.py core.wsgi:application"
+cmd = "gunicorn -c .box/etc/gunicorn.py -k uvicorn_worker.UvicornWorker core.asgi:application"
 use_exec = true
 
 [tool.poe.tasks.start-dev]
-cmd = "./manage.py runserver 0.0.0.0:8000"
+cmd = "uvicorn core.asgi:application --host 0.0.0.0 --port 8000 --reload"
 use_exec = true
 
 [tool.poe.tasks.start-bot]

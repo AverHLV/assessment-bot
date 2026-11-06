@@ -17,16 +17,24 @@ class AssessmentReviewTestCase(AssessmentReviewBaseTestCase):
     def test__assessment_modal__review_input(self):
         modal = self.get_modal()
 
-        self.assertEqual([item.label for item in modal.children], ['Mark', 'If partial', 'Review'])
+        self.assertEqual([item.text for item in modal.children], ['Mark', 'If partial', 'Review'])
         self.assertIs(modal.children[2], modal.review)
-        self.assertFalse(modal.review.required)
-        self.assertEqual(modal.review.style, discord.TextStyle.paragraph)
-        self.assertEqual(modal.review.max_length, 1000)
-        self.assertIn('Optional', modal.review.placeholder)
+        self.assertFalse(modal.review.component.required)
+        self.assertEqual(modal.review.component.style, discord.TextStyle.paragraph)
+        self.assertEqual(modal.review.component.max_length, 1000)
+        self.assertIn('Optional', modal.review.component.placeholder)
         self.assertLessEqual(len(modal.children), 5)
         for item in modal.children:
-            self.assertLessEqual(len(item.label), 45)
-            self.assertLessEqual(len(item.placeholder), 100)
+            self.assertIsInstance(item, discord.ui.Label)
+            self.assertLessEqual(len(item.text), 45)
+            self.assertLessEqual(len(item.component.placeholder), 100)
+
+        components = modal.to_dict()['components']
+        self.assertEqual([item['label'] for item in components], ['Mark', 'If partial', 'Review'])
+        self.assertEqual([item['type'] for item in components], [18, 18, 18])
+        for item in components:
+            self.assertEqual(item['component']['type'], 4)
+            self.assertIsNone(item['component']['label'])
 
     @patch('api.llm.clients.AsyncOpenRouterClient.create_completion')
     def test__assessment_modal__review_saved(self, completion_mock):
@@ -116,7 +124,7 @@ class AssessmentReviewTestCase(AssessmentReviewBaseTestCase):
     @patch('api.llm.clients.AsyncOpenRouterClient.create_completion')
     def test__assessment_modal__errors__partial_too_long(self, completion_mock):
         modal = self.get_modal(self.review_text)
-        modal.partial._value = 'p' * 301
+        modal.partial.component._value = 'p' * 301
 
         self.submit(modal, queries=0)
 
@@ -127,7 +135,7 @@ class AssessmentReviewTestCase(AssessmentReviewBaseTestCase):
     @patch('api.llm.clients.AsyncOpenRouterClient.create_completion')
     def test__assessment_modal__errors__invalid_mark_with_review(self, completion_mock):
         modal = self.get_modal(self.review_text)
-        modal.mark._value = '4.3'
+        modal.mark.component._value = '4.3'
 
         self.submit(modal, queries=0)
 
