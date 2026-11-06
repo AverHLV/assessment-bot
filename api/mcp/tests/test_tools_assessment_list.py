@@ -127,13 +127,36 @@ class AssessmentFiltersTestCase(AssessmentToolsTestCase):
         self.assert_page(result, [self.assessment.pk], total=1)
 
     def test__list_assessments__all_filters_must_match(self):
-        result = self.call_tool('list_assessments', {'name': 'dune', 'category': 'movie', 'partial': True}, queries=3)
+        filters = {'name': 'dune', 'category': 'movie', 'partial': True, 'has_review': True}
+
+        result = self.call_tool('list_assessments', filters, queries=3)
 
         self.assert_page(result, [self.assessment.pk], total=1)
         excluded = self.call_tool(
             'list_assessments', {'name': 'dune', 'category': 'movie', 'partial': False}, queries=2
         )
         self.assert_page(excluded, [], total=0)
+        excluded_review = self.call_tool('list_assessments', {**filters, 'has_review': False}, queries=2)
+        self.assert_page(excluded_review, [], total=0)
+
+    def test__list_assessments__has_review_true(self):
+        result = self.call_tool('list_assessments', {'has_review': True}, queries=3)
+
+        self.assert_page(result, [self.assessment.pk], total=1)
+
+    def test__list_assessments__has_review_false(self):
+        AssessmentFactory(user=self.other_user, media__creator=self.other_user, review='')
+
+        result = self.call_tool('list_assessments', {'has_review': False}, queries=3)
+
+        self.assert_page(result, [self.arcane.pk, self.alien.pk, self.dune_book.pk], total=3)
+
+    def test__list_assessments__has_review_legacy_whitespace(self):
+        row = AssessmentFactory(user=self.user, media__creator=self.user, review=' \t\n')
+
+        result = self.call_tool('list_assessments', {'has_review': True}, queries=3)
+
+        self.assert_page(result, [row.pk, self.assessment.pk], total=2)
 
     def test__list_assessments__partial_true(self):
         result = self.call_tool('list_assessments', {'partial': True}, queries=3)
@@ -151,7 +174,9 @@ class AssessmentFiltersTestCase(AssessmentToolsTestCase):
         self.assert_page(result, self.ordered_ids, total=4)
 
     def test__list_assessments__null_filters(self):
-        result = self.call_tool('list_assessments', {'name': None, 'category': None, 'partial': None}, queries=3)
+        result = self.call_tool(
+            'list_assessments', {'name': None, 'category': None, 'partial': None, 'has_review': None}, queries=3
+        )
 
         self.assert_page(result, self.ordered_ids, total=4)
 
@@ -196,13 +221,24 @@ class AssessmentFiltersTestCase(AssessmentToolsTestCase):
 
     def test__list_assessments__filter_totals_across_pages(self):
         AssessmentFactory.create_batch(
-            30, user=self.user, media__creator=self.user, media__category=self.movie, partial='In progress'
+            30,
+            user=self.user,
+            media__creator=self.user,
+            media__category=self.movie,
+            partial='In progress',
+            review='My thoughts',
         )
+        AssessmentFactory(
+            user=self.user, media__creator=self.user, media__category=self.movie, partial='In progress', review=''
+        )
+        filters = {'category': 'movie', 'partial': True, 'has_review': True}
 
-        first = self.call_tool('list_assessments', {'category': 'movie', 'partial': True}, queries=3)
-        second = self.call_tool('list_assessments', {'category': 'movie', 'partial': True, 'page': 2}, queries=3)
+        first = self.call_tool('list_assessments', filters, queries=3)
+        second = self.call_tool('list_assessments', {**filters, 'page': 2}, queries=3)
+        beyond = self.call_tool('list_assessments', {**filters, 'page': 3}, queries=2)
 
         self.assertEqual(len(first['items']), 30)
         self.assertEqual(first['total'], 31)
         self.assertIs(first['has_next'], True)
         self.assert_page(second, [self.assessment.pk], total=31, page=2)
+        self.assert_page(beyond, [], total=31, page=3)

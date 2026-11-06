@@ -44,6 +44,10 @@ async def list_assessments(
         StrictBool | None,
         Field(description='True: non-empty partial note; false: empty note; omitted: both.'),
     ] = None,
+    has_review: Annotated[
+        StrictBool | None,
+        Field(description='True: non-empty review; false: empty review; omitted or null: both.'),
+    ] = None,
 ) -> AssessmentPage:
     """List only your own assessments, newest first, in fixed pages of 30.
 
@@ -54,7 +58,7 @@ async def list_assessments(
     """
 
     queryset = Assessment.objects.filter(user_id=authenticated_user_id()).matching(
-        name=name, category=category, partial=partial
+        name=name, category=category, partial=partial, has_review=has_review
     )
     total = await queryset.acount()
     offset = (page - 1) * PAGE_SIZE
@@ -101,7 +105,9 @@ async def update_review(assessment_id: AssessmentId, review: ReviewText) -> Asse
     mark, partial note, or media. Return the same full detail object as retrieve_assessment, including
     your mark (0–10 in half steps) and media meta mark (0–10 or null). Repeating input is idempotent.
     Missing and other users' assessment IDs return the same error. No LLM reply is generated.
-    Write the review in the user's first-person voice: use "I think" instead of "The user thinks".
+    Write a review only when the user asks to save, summarize, or record their thoughts as a review;
+    do not save reviews unsolicited during ordinary discussion. Write in the user's first-person voice:
+    use "I think" instead of "The user thinks". Honor explicit requests to edit or clear an existing review.
     """
 
     return await sync_to_async(save_review, thread_sensitive=True)(authenticated_user_id(), assessment_id, review)
@@ -118,7 +124,7 @@ def register_assessment_tools(server: MCPServer) -> None:
     for tool in (list_assessments, retrieve_assessment):
         server.add_tool(
             tool,
-            description=f'{tool.__doc__}\n{review_limit_description}',
+            description=tool.__doc__,
             annotations=read_annotations,
             structured_output=True,
         )

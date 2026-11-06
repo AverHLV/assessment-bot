@@ -19,7 +19,7 @@ class AssessmentToolContractsTestCase(AssessmentProtocolTestCase):
         tools = {tool['name']: tool for tool in response.json()['result']['tools']}
         self.assertEqual(set(tools), {'list_assessments', 'retrieve_assessment', 'update_review'})
         expected_inputs = {
-            'list_assessments': ({'page', 'name', 'category', 'partial'}, set()),
+            'list_assessments': ({'page', 'name', 'category', 'partial', 'has_review'}, set()),
             'retrieve_assessment': ({'assessment_id'}, {'assessment_id'}),
             'update_review': ({'assessment_id', 'review'}, {'assessment_id', 'review'}),
         }
@@ -35,7 +35,7 @@ class AssessmentToolContractsTestCase(AssessmentProtocolTestCase):
 
                 self.assertIn('0–10', tool['description'])
                 self.assertIn('half steps', tool['description'])
-                self.assertIn('1000 characters after trimming', tool['description'])
+                self.assertEqual('1000 characters after trimming' in tool['description'], name == 'update_review')
                 hints = tool['annotations']
                 self.assertIs(hints['readOnlyHint'], name != 'update_review')
                 self.assertIs(hints['destructiveHint'], name == 'update_review')
@@ -53,6 +53,8 @@ class AssessmentToolContractsTestCase(AssessmentProtocolTestCase):
         category_schema = inputs['$defs']['Code']
         self.assertEqual(set(category_schema['enum']), set(MediaCategory.Code.values))
         self.assertIn({'type': 'boolean'}, inputs['properties']['partial']['anyOf'])
+        self.assertEqual(inputs['properties']['has_review']['anyOf'], [{'type': 'boolean'}, {'type': 'null'}])
+        self.assertIsNone(inputs['properties']['has_review']['default'])
         page = listing['outputSchema']
         self.assertEqual(set(page['properties']), {'items', 'page', 'page_size', 'total', 'has_next'})
         self.assertEqual(page['properties']['page_size']['minimum'], 30)
@@ -69,6 +71,10 @@ class AssessmentToolContractsTestCase(AssessmentProtocolTestCase):
 
         retrieve = tools['retrieve_assessment']
         update = tools['update_review']
+        self.assertIn('only when the user asks', update['description'])
+        self.assertIn('save, summarize, or record their thoughts', update['description'])
+        self.assertIn('first-person voice', update['description'])
+        self.assertIn('"I think" instead of "The user thinks"', update['description'])
         self.assertEqual(retrieve['outputSchema'], update['outputSchema'])
         detail = retrieve['outputSchema']
         self.assertEqual(set(detail['properties']), DETAIL_KEYS)

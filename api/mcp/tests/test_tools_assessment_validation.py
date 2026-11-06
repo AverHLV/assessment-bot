@@ -32,6 +32,11 @@ class AssessmentArgumentValidationTestCase(AssessmentToolsTestCase):
             with self.subTest(partial=partial):
                 self.assert_invalid('list_assessments', {'partial': partial}, 'partial')
 
+    def test__list_assessments__errors__has_review_type(self):
+        for has_review in (0, 1, 1.5, 'true', 'false', '', [], {}):
+            with self.subTest(has_review=has_review):
+                self.assert_invalid('list_assessments', {'has_review': has_review}, 'has_review')
+
     def test__retrieve_assessment__errors__identifier_type(self):
         for identifier in (1.5, True, None, 'not an id', [], {}):
             with self.subTest(assessment_id=identifier):

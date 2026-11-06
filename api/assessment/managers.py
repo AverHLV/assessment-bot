@@ -28,7 +28,14 @@ class MediaQuerySet(models.QuerySet):
 
 
 class AssessmentQuerySet(models.QuerySet):
-    def matching(self, *, name: str | None = None, category: str | None = None, partial: bool | None = None):
+    def matching(
+        self,
+        *,
+        name: str | None = None,
+        category: str | None = None,
+        partial: bool | None = None,
+        has_review: bool | None = None,
+    ):
         queryset = self
         if name:
             queryset = queryset.filter(media__name__icontains=name)
@@ -38,6 +45,10 @@ class AssessmentQuerySet(models.QuerySet):
             queryset = queryset.exclude(partial='')
         elif partial is False:
             queryset = queryset.filter(partial='')
+        if has_review is True:
+            queryset = queryset.exclude(review='')
+        elif has_review is False:
+            queryset = queryset.filter(review='')
 
         return queryset
 
