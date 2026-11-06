@@ -27,6 +27,21 @@ class MediaQuerySet(models.QuerySet):
         )
 
 
+class AssessmentQuerySet(models.QuerySet):
+    def matching(self, *, name: str | None = None, category: str | None = None, partial: bool | None = None):
+        queryset = self
+        if name:
+            queryset = queryset.filter(media__name__icontains=name)
+        if category is not None:
+            queryset = queryset.filter(media__category__code=category)
+        if partial is True:
+            queryset = queryset.exclude(partial='')
+        elif partial is False:
+            queryset = queryset.filter(partial='')
+
+        return queryset
+
+
 class PollQuerySet(models.QuerySet):
     def initial(self, **kwargs):
         return self.filter(status=self.model.Status.INITIAL, **kwargs)

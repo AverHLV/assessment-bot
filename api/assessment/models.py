@@ -120,6 +120,8 @@ class Assessment(models.Model):
     media = models.ForeignKey(Media, on_delete=models.PROTECT, related_name='assessments')
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='assessments')
 
+    objects = managers.AssessmentQuerySet.as_manager()
+
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['media', 'user'], name='uq_assessment_media_user'),

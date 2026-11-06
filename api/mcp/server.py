@@ -1,15 +1,14 @@
 from django.conf import settings
 
-from mcp.server.auth.middleware.auth_context import get_access_token
 from mcp.server.auth.settings import AuthSettings
 from mcp.server.mcpserver import MCPServer
 from mcp.server.transport_security import TransportSecuritySettings
 from starlette.middleware.cors import CORSMiddleware
 
-from typing import cast
 from urllib.parse import urlsplit
 
-from api.mcp.provider import OAuthProvider, RequestAccessToken
+from api.mcp.provider import OAuthProvider
+from api.mcp.tools.assessment import register_assessment_tools
 from api.mcp.validation import public_base_url
 
 
@@ -31,12 +30,7 @@ def create_server() -> tuple[MCPServer, OAuthProvider, CORSMiddleware]:
         ),
     )
 
-    @server.tool()
-    async def hello() -> str:
-        """Greet the authenticated Discord bot user."""
-
-        token = cast(RequestAccessToken, get_access_token())
-        return f'Hello, {token.username}!'
+    register_assessment_tools(server)
 
     hosts = [urlsplit(base).netloc]
     origins = [
