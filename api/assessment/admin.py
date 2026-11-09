@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 
 from api.assessment import models
@@ -74,6 +75,11 @@ class AssessmentAdmin(admin.ModelAdmin):
     search_fields = ('media__name',)
     readonly_fields = 'id', 'create_dt'
     ordering = ('-create_dt',)
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == 'review':
+            kwargs['widget'] = forms.Textarea
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
 
     def display_media(self, obj: models.Assessment) -> str:
         return obj.media.name
