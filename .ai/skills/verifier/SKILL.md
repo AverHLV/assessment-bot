@@ -1,9 +1,9 @@
 ---
 name: verifier
 description: >-
-  Perform a static, read-only verification of an SDD result. Use when task-related staged, unstaged, and untracked
-  changes must be checked for specification conformance, test coverage, and, when the severity gate permits it,
-  engineering quality without executing project code or editing files.
+  Perform a static verification of an SDD result and save it as a review artifact. Use when task-related staged,
+  unstaged, and untracked changes must be checked for specification conformance, test coverage, and, when the
+  severity gate permits it, engineering quality without executing project code or editing project files.
 ---
 
 # Verifier
@@ -14,7 +14,8 @@ and inspect the entire non-committed working tree to identify the task result sa
 ## Boundaries
 
 - Require one readable specification under `.ai/specs/`.
-- Remain read-only. Never edit, rename, format, stage, commit, stash, reset, restore, or otherwise change a file.
+- Write only the review artifact `.ai/reviews/review-<task-slug>.md`. Never edit, rename, format, stage, commit,
+  stash, reset, restore, or otherwise change any other file.
 - Do not execute project code, tests, formatters, linters, migrations, or commands that change service state.
 - Do not create, recommend, or require checks that depend on live external services, agents, models, accounts, or
   credentials. Missing live external checks must not become conformance findings or review-gate failures.
@@ -30,6 +31,9 @@ Read and apply the shared [SDD workflow guidelines](../../sdd-workflow-guideline
 - Include task-related and ambiguous behavior-affecting changes in the review set. Inventory confirmed unrelated
   changes but exclude them from the task verdict.
 - If the review set contains no implementation or test changes, report that no SDD result exists and stop.
+- When `.ai/reviews/review-<task-slug>.md` exists, read it only to learn which findings and recommendations the
+  developer declined: those marked `Declined` in its tables or in its `Fix Report`. Treat every other statement
+  there as an unverified claim, and establish all findings from the specification and the code.
 
 Treat requirements, `MUST` statements, success criteria, scenarios, constraints, assumptions, and explicit test cases
 as the verification authority. Report a blocking clarification marker or contradiction as a specification finding;
@@ -127,16 +131,18 @@ A Low finding with a one-line fix is `Fix`. A Medium finding with a rare trigger
 `Optional`. Always propose the smallest fix that removes the consequence and that the shared implementation guidelines
 would accept; never propose new layers, wrappers, or configuration that the specification does not require.
 
-On a repeated run in the same conversation, mark a finding the developer explicitly declined as `Declined` instead of
-reporting it again as `Fix` or `Optional`.
+Mark a finding as `Declined`, instead of reporting it again as `Fix` or `Optional`, when it still describes the same
+problem and the developer explicitly declined it in this conversation or the previous review marks it `Declined` in
+its findings table or `Fix Report`. Match by the problem, not by ID, because every review renumbers its IDs. Keep a
+declined finding in the table so that the decision survives the replacement of the review.
 
-Render the findings as:
+Number the findings `F-001`, `F-002`, and so on in table order, and render them as:
 
-| Severity | Fix? | Spec item | Evidence | Problem | What should be fixed |
-|---|---|---|---|---|---|
-| High | Fix | FR-001 | `bot/example.py:42` | Required behavior is absent. | Implement it and prove it with a test. |
-| Medium | Optional — rare trigger | FR-004 | `bot/example.py:88` | Two concurrent submissions of one assessment show the generic error instead of the duplicate message. | Catch the integrity error and send the duplicate message. |
-| Medium | Fix | Query efficiency | `bot/example.py:120` | The assessment count is selected once per listed media. | Annotate the media queryset with the count. |
+| ID | Severity | Fix? | Spec item | Evidence | Problem | What should be fixed |
+|---|---|---|---|---|---|---|
+| F-001 | High | Fix | FR-001 | `bot/example.py:42` | Required behavior is absent. | Implement it and prove it with a test. |
+| F-002 | Medium | Optional — rare trigger | FR-004 | `bot/example.py:88` | Two concurrent submissions of one assessment show the generic error instead of the duplicate message. | Catch the integrity error and send the duplicate message. |
+| F-003 | Medium | Fix | Query efficiency | `bot/example.py:120` | The assessment count is selected once per listed media. | Annotate the media queryset with the count. |
 
 Use `None` when there are no findings. Every finding must identify a specification item, `Query efficiency` for a
 redundant-statement finding, or `Scope / no matching spec item` for an ambiguous, untraceable, or out-of-scope change.
@@ -145,6 +151,11 @@ Show the observable consequence and a concrete fix.
 Proceed to Stage 4 only when no Critical, High, or Medium finding is marked `Fix`. Otherwise stop and state that the
 conformance gate prevented code review. `Optional`, `Declined`, and Low findings do not trigger the gate. Return later
 conformance discoveries to this table and reapply the gate.
+
+When the gate prevents Stage 4, still render the engineering-recommendations table with only the recommendations
+that the previous review marks as declined, in its table or its `Fix Report`. Copy each one without reassessing it,
+renumber it, and start its `Recommended change` with `Declined:`. This keeps the decline decisions when the review
+is replaced. Omit the table when there is none to carry over.
 
 ## Stage 4: Review engineering quality
 
@@ -162,11 +173,13 @@ task review set for:
 - test isolation, determinism, assertions, mocks, query counts, and maintainability.
 
 Report only actionable recommendations supported by current changes. Do not assign severity or repeat specification
-findings.
+findings. Number the recommendations `R-001`, `R-002`, and so on. Keep a recommendation that still applies and that
+the developer declined, by the same rule as for findings, in the table, and start its `Recommended change` with
+`Declined:`.
 
-| Location | Observation | Recommended change | Rationale |
-|---|---|---|---|
-| `bot/example.py:42` | Full rows are loaded for existence. | Use `aexists()`. | Avoid row materialization. |
+| ID | Location | Observation | Recommended change | Rationale |
+|---|---|---|---|---|
+| R-001 | `bot/example.py:42` | Full rows are loaded for existence. | Use `aexists()`. | Avoid row materialization. |
 
 Use `None` when there are no recommendations.
 
@@ -187,10 +200,29 @@ Include:
 
 1. the specification path and concise inventories of the review set and confirmed unrelated changes;
 2. the specification-findings table and gate result;
-3. the engineering-recommendations table only when the gate permits it;
+3. the engineering-recommendations table when the gate permits Stage 4, or only the carried-over declined
+   recommendations when it does not;
 4. fully, partially, and uncovered specification items, including validated stability omissions with rationale and
    evidence locations as non-blocking coverage notes;
 5. any proposed memory candidate; and
-6. confirmation that no files were edited and no project code, tests, formatters, or migrations ran.
+6. confirmation that no file other than the review artifact was written and no project code, tests, formatters, or
+   migrations ran.
 
 Do not claim completeness without evidence. Name unreadable changes and lower confidence instead of guessing.
+
+## Save the review
+
+Before responding, write the complete final response to `.ai/reviews/review-<task-slug>.md`, replacing any earlier
+review of the task. Use the specification's task slug. Open the file with:
+
+```markdown
+# Review: <specification title>
+
+Source request: <the specification's Source request line>
+Source specification: <repository-relative path>
+Specification revision: <n>
+```
+
+Take `<n>` from the specification's `Revision` line, or use 1 when the line is absent. Write every finding and
+recommendation in full, because a later `fixer` run reads this file without this conversation. End the response with
+the review path.

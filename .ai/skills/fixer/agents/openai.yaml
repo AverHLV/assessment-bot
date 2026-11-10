@@ -1,0 +1,4 @@
+interface:
+  display_name: "Fixer"
+  short_description: "Fix saved SDD review findings"
+  default_prompt: "Use $fixer to fix the findings of the saved verification review for the selected task."

@@ -132,7 +132,8 @@ Read and reuse this support before introducing new helpers:
 
 - Use `self.assertNumQueries` whenever the tested execution can issue database queries, including negative paths that
   reach the database. Wrap only the measured execution and assert the exact expected count.
-- Take the expected count from the query budget in the selected plan or implementer report when one is available.
+- Take the expected count from the final query budget in the plan's `Implementation Record` or the implementer
+  report when one is available.
   Otherwise build the budget from the code path as defined in the
   [implementation guidelines](implementation-guidelines.md). Never adopt a measured count without checking each
   captured statement against the query efficiency rules there.

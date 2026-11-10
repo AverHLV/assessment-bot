@@ -43,6 +43,12 @@ Apply these project-wide rules when implementing or reviewing production changes
 - Do not insert blank lines between the branches of a single `if`/`elif`/`else` chain, unless its branches are
   large standalone blocks where blank lines between them improve readability.
 
+## Type hints
+
+- Require explicit type hints for all function and method arguments and return values, including asynchronous
+  functions and nested helpers.
+- Use `-> None` for functions and methods that do not return a value.
+
 ## Logging and exceptions
 
 - Inside an exception handler, log the exception with `logger.exception` rather than `logger.error`, and log the

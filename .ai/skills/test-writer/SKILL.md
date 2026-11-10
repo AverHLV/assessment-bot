@@ -25,6 +25,8 @@ Read and apply the shared [SDD workflow guidelines](../../sdd-workflow-guideline
 
 - Allow specification artifacts only under `.ai/specs/`.
 - Resolve a task slug to `.ai/specs/spec-<task-slug>.md`. Without an identifier, require exactly one specification.
+- Also read `.ai/plans/plan-<task-slug>.md` when it exists. Use its `Implementation Record` as technical guidance for
+  the final query budget and technical decisions, never as acceptance authority.
 - Require task-related non-committed production changes. If none exist, report that there is no implementation to
   test and stop.
 - Record the initial task-related and unrelated changes so later test edits and formatter effects remain attributable.

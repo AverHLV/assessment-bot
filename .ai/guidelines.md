@@ -52,8 +52,10 @@ expected input data, and output location.
   directly or writes a plan and stops for large or materially uncertain tasks; it never writes tests.
 - Use `test-writer` after task-related production changes exist and tests must be written or run. It intentionally
   edits only tests and test-support code.
-- Use `verifier` after implementation and tests exist and a static audit is requested. It edits nothing and executes
-  no project code.
+- Use `verifier` after implementation and tests exist and a static audit is requested. It executes no project code
+  and writes only its review under `.ai/reviews/`.
+- Use `fixer` in a fresh session after `verifier` saved a review with findings. It fixes them in production code and
+  tests in one pass and reports the status of every finding; run `verifier` again afterwards.
 - Do not use a later-stage skill to supply a missing prerequisite; route the task to the earlier applicable skill.
 
 ## Skill conventions

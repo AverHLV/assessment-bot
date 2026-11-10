@@ -121,3 +121,5 @@ cmake-build-*/
 !/.ai/plans/README.md
 /.ai/specs/*
 !/.ai/specs/README.md
+/.ai/reviews/*
+!/.ai/reviews/README.md
