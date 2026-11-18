@@ -51,6 +51,13 @@ plan or changing files, and report the assumption ID, the evidence, and the spec
 Choose the smallest architecture consistent with the repository. Prefer existing patterns and dependencies. Record
 only low-risk, reversible assumptions; never invent business policy, security behavior, or external contracts.
 
+Implement each requirement's plain wording and stated cases with the simplest mechanism, and reuse a mechanism that
+the specification cites as a requirement's basis, as the shared implementation guidelines define. When a mechanism
+without extra scope, as defined there, satisfies the requirement and its stated cases, use it and omit the extra
+scope without asking. Treat extra scope as a decision for the developer only when no such mechanism satisfies the
+specification or the developer asks for the extra scope. Approval is valid only when the specification requires the
+scope, or the developer approves it in this conversation or in a `Developer approved` entry of the plan.
+
 ## Decide whether to plan
 
 Follow a selected implementation-ready plan. When none exists, create `.ai/plans/plan-<task-slug>.md` and stop
@@ -79,9 +86,17 @@ until the dialogue ends.
 A decision that changes acceptance behavior belongs to the specification, not to the plan. Do not settle it as a
 technical choice. Report the required specification revision, route the task back to `spec-writer`, and stop.
 
+An extra-scope choice that needs approval under the rule above is a material technical decision. When a plan is
+written, list it under `Open Questions`, explain why no mechanism without it satisfies the specification, and do not
+implement it until the developer approves it. In direct implementation, ask through the same dialogue before
+changing files.
+
 Record accepted answers under `Clarifications` in the plan or, for direct implementation, in the
-`Implementation Record`. When the user ends the dialogue while a material technical decision is unresolved, write the
-plan with that decision under `Open Questions` and stop. Never implement while a decision is open.
+`Implementation Record`. Record every approved extra-scope choice, including one approved in direct implementation,
+as a `Developer approved: <scope>` entry under the plan's `Clarifications`, naming the approved mechanism, as the
+shared implementation guidelines require. When the user ends the dialogue while a material
+technical decision is unresolved, write the plan with that decision under `Open Questions` and stop. Never implement
+while a decision is open.
 
 ## Write the plan
 
@@ -113,7 +128,8 @@ Apply these rules:
 - Number technical decisions `D-001`, `D-002`, and so on. State each decision and the repository evidence or
   convention behind it. Where a real alternative existed, name it and the reason for rejecting it.
 - Give every assumption its basis: a specification statement, a repository-relative path, or a named convention.
-- List under `Open Questions` every material technical decision that is still unresolved. Omit the section otherwise.
+- List under `Open Questions` every material technical decision that is still unresolved, including every
+  extra-scope choice that still needs approval. Omit the section otherwise.
 - Write the work order as numbered checkbox steps, `- [ ] 1. <outcome>`, ordered by dependency. Name the files each
   step adds or changes and the requirements it serves. Size each step so that it can be completed and reviewed on
   its own.
@@ -160,9 +176,10 @@ From the repository root:
 4. Do not create or run tests. Review the final diff and report formatter effects outside the task scope.
 5. Write the `Implementation Record` to `.ai/plans/plan-<task-slug>.md` so that later stages can read it without this
    conversation. When no plan exists, create the file with only the plan title, the `Source request`,
-   `Source specification`, and `Specification revision` lines, and this section. Record the final query budget, the
-   technical decisions and assumptions made outside the plan, accepted clarifications, deviations from the plan, and
-   required specification revisions. Replace an earlier record instead of appending a history.
+   `Source specification`, and `Specification revision` lines, this section, and a `Clarifications` section when
+   approvals exist. Record the final query budget, the technical decisions and assumptions made outside the plan,
+   accepted clarifications, deviations from the plan, and required specification revisions. Replace an earlier record
+   instead of appending a history, and keep every `Developer approved` entry under `Clarifications`.
 
 Add at most one `.ai/memories/` entry only for a verified, non-obvious, reusable finding that satisfies
 `.ai/guidelines.md`; never record task history or documented facts.

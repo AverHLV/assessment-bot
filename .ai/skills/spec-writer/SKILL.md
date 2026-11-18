@@ -61,6 +61,20 @@ Internally assess each applicable area as `Clear`, `Partial`, or `Missing`:
 
 Record why an area is irrelevant. Also detect synonym drift, unresolved TODOs, contradictions, and vague adjectives.
 
+## Check the task size
+
+Keep one goal per specification. A goal is independent when it can be implemented, reviewed, and accepted without
+the others, such as an unrelated bug fix, a separate monitoring issue, or a feature in a different workflow. When the
+request contains more than one independent goal, propose a split before the clarification dialogue:
+
+- list each goal with its scope in one line, and name the goal that this specification should keep;
+- ask the user to confirm the split or to keep the goals together; and
+- after a confirmed split, write only the specification for the kept goal, derive its task slug from that goal, and
+  list the other goals in the report as separate tasks. Do not write their specifications in this run.
+
+Goals that only make sense together may stay in one specification. When the user keeps independent goals together,
+record that decision under `Clarifications`.
+
 ## Resolve material ambiguity
 
 Use the shared [clarification dialogue guidelines](../../clarification-guidelines.md). Update the task model after each
@@ -123,6 +137,10 @@ Apply these rules:
 - Make each requirement atomic, observable, unambiguous, and testable. Include actor, trigger or precondition,
   behavior, and observable result when relevant.
 - Use `MUST`, `SHOULD`, and `MAY` consistently; reserve `MUST` for acceptance-critical behavior.
+- For a heuristic or quality requirement, such as matching, ranking, language detection, or text recognition, state
+  the acceptance bar as concrete stated cases: example inputs with expected results in the requirement, a success
+  criterion, or a scenario. Write broad wording, such as "an inflected word" or "any language", as the goal those
+  cases illustrate, not as a universal rule. Name the generalizations that are out of scope.
 - Separate behavior from quality attributes and implementation suggestions. Describe the domain without prescribing
   tables, classes, or framework components unless the source requires them.
 - Cover relevant validation, empty states, permissions, dependency failures, retries, idempotency, concurrency,

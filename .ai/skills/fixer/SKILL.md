@@ -35,11 +35,14 @@ Build the work list from the review, taking each entry verbatim:
 
 - every finding marked `Fix`;
 - every engineering recommendation that is not marked `Declined`; and
-- an `Optional` finding only when the user names it.
+- an `Optional` finding only when the user explicitly asks to fix or implement it. Mentioning a finding, asking about
+  it, or asking for an estimate is not such a request. An explicit request to fix an `Optional — needs decision`
+  finding approves the extra scope that its `What should be fixed` describes, and nothing beyond it.
 
 Exclude an entry that the user declines in the request and record it as `Declined`. Exclude an entry that an existing
-`Fix Report` already marks `Fixed` or `Declined`, and keep that status. If the work list is empty, skip fixing,
-formatting, and tests: write the `Fix Report` as described below, report it, and stop.
+`Fix Report` already marks `Fixed` or `Declined`, and keep that status. An entry marked `Not fixed — needs decision`
+is not settled; include it when the review marks it `Fix` or the user explicitly asks to fix it. If the work list is
+empty, skip fixing, formatting, and tests: write the `Fix Report` as described below, report it, and stop.
 
 ## Fix
 
@@ -56,6 +59,18 @@ Read and apply the shared [implementation guidelines](../../implementation-guide
    [implementer skill](../implementer/SKILL.md).
 5. When a fix needs a decision that changes acceptance behavior, or a design beyond a local change, do not improvise.
    Record the entry as `Not fixed` and name the required specification revision or `implementer` run.
+6. Before building a fix, check what its smallest real implementation requires, using the definitions of a stated
+   case and of extra scope in the shared implementation guidelines. When a fix without extra scope removes the
+   stated consequence, use it. Build extra scope only when the specification requires it, the developer explicitly
+   asks to implement it for that entry in the request, or the plan's `Clarifications` record it as
+   `Developer approved: <scope>`. The review's wording, including a fix it proposes that names the mechanism,
+   carries no approval. Never build a fix that would break another stated case of the specification. Otherwise
+   record the entry as `Not fixed — needs decision`, name what the fix would require, and leave the decision to the
+   developer.
+7. When the developer approved extra scope for an entry in the request, record the entry as
+   `Fixed — developer approved: <scope>` in the `Fix Report`. Also add a `Developer approved: <scope>` entry under
+   `Clarifications` in `.ai/plans/plan-<task-slug>.md`, as the shared implementation guidelines require, so that
+   later reviews do not report it as out of scope after the review is replaced.
 
 ## Verify and report
 
@@ -79,10 +94,13 @@ Run every command from the repository root:
 | F-001 | Fixed | `bot/example.py:42` now sends the duplicate message; covered by `test_rate_duplicate`. |
 | F-002 | Skipped — optional | Not requested. |
 | F-003 | Not fixed — evidence no longer holds | `bot/example.py:120` already annotates the media queryset. |
+| F-004 | Not fixed — needs decision | Matching titles across languages requires per-language transliteration tables. |
+| F-005 | Fixed — developer approved: localized date formats | `bot/example.py:170` parses `dd.mm.yyyy`; covered by `test_parse_localized_date`. |
 | R-001 | Declined | Declined by the developer in the request. |
 
-Use `Fixed`, `Not fixed — <reason>`, `Declined`, or `Skipped — optional` as the status. Record an entry that the
-review itself marks `Declined` as `Declined`, and carry over a status that an earlier `Fix Report` already settled.
+Use `Fixed`, `Fixed — developer approved: <scope>`, `Not fixed — <reason>`, `Declined`, or `Skipped — optional` as
+the status. Record an entry that the review itself marks `Declined` as `Declined`, and carry over a status that an
+earlier `Fix Report` already settled. Only `Fixed`, `Fixed — developer approved: <scope>`, and `Declined` are settled.
 An ID without a row is an error; add the row before finishing.
 
 Report the same table; the changed files; the formatting and complete-suite results; unresolved failures; and required

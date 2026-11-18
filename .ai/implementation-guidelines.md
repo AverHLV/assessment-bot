@@ -34,6 +34,20 @@ Apply these project-wide rules when implementing or reviewing production changes
   transaction handling, reuse, or another identifiable responsibility.
 - Do not leave indirection or flexibility that cannot be traced to a specification requirement, an existing
   convention, or a current concrete use.
+- Implement a requirement's plain wording and its stated cases with the simplest mechanism. A stated case is a
+  concrete input and outcome written in the specification: example values, an acceptance scenario, an explicit test
+  case, or the specific values that a success criterion names. Broad wording such as "an inflected word" or "any
+  language" states a goal, not a case. When the specification cites an existing mechanism as the basis for a
+  requirement, reuse that mechanism before building a new one.
+- Extra scope is a new heuristic; hard-coded language-, locale-, or domain-specific data such as word lists, suffix
+  tables, or per-language rules; a new dependency; a design change beyond what the specification requires; or
+  expected behavior that the specification does not state. Add extra scope only when the specification requires it
+  or the developer explicitly approves it. A plan, review, or proposed fix that names the mechanism carries no
+  approval. When a mechanism without extra scope satisfies the specification, use it and omit the extra scope.
+- Record each approval of extra scope as a `Developer approved: <scope>` entry under `Clarifications` in
+  `.ai/plans/plan-<task-slug>.md`. When the file is absent, create it with the plan title and the `Source request`,
+  `Source specification`, and `Specification revision` lines. This section is the only durable record of approvals:
+  every stage reads approvals from it and keeps its existing entries when it rewrites the file.
 
 ## Formatting
 
