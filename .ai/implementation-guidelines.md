@@ -70,6 +70,12 @@ Apply these project-wide rules when implementing or reviewing production changes
   Include the exception message in the log message, for example `logger.exception(f'Operation failed: {exc}')`.
 - Outside an active exception handler, or when logging an exception other than the one being handled, pass the
   exception explicitly with `exc_info=<exception>`. `logger.exception` alone records no traceback there.
+- Exception: log a routine `asyncio.CancelledError` (shutdown, client disconnect, cleanup, or any other task
+  cancellation) once with `logger.warning` and no traceback, keeping the usual message and context. Append the
+  cancellation message only when it is non-empty. This covers a cancellation caught directly, through an exception
+  tuple or `BaseException`, seen in a done callback, or returned by `asyncio.gather(..., return_exceptions=True)`.
+  Keep `logger.exception` for any other exception caught by the same handler and for a real failure that happens
+  while a cancellation is handled, such as incomplete recovery or cleanup.
 
 ## Constants
 
