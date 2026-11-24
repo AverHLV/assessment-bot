@@ -56,6 +56,9 @@ expected input data, and output location.
   and writes only its review under `.ai/reviews/`.
 - Use `fixer` in a fresh session after `verifier` saved a review with findings. It fixes them in production code and
   tests in one pass and reports the status of every finding; run `verifier` again afterwards.
+- `test-writer` and `fixer` run only focused task-related tests. Run the complete suite with `make project@test` once,
+  after the review passes. A review passes when the latest review has no finding marked `Fix`, every engineering
+  recommendation in it is marked `Declined` there or in its `Fix Report`, and no code or test changes followed it.
 - Do not use a later-stage skill to supply a missing prerequisite; route the task to the earlier applicable skill.
 
 ## Skill conventions

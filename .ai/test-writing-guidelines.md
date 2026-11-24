@@ -71,6 +71,23 @@ Read and reuse this support before introducing new helpers:
   of deterministically testable behavior, including required negative paths and surrounding acceptance workflows.
   An omission does not waive an implementation requirement and must remain identified as uncovered.
 
+## Test execution
+
+- While writing task tests or fixing review findings, run only focused tests. The complete suite runs once, after the
+  review passes as defined under `Skill routing` in the [project guidelines](guidelines.md). Do not run it earlier
+  unless the user explicitly requests it.
+- Focused tests are the whole task's tests, not only those of the latest edit:
+  - every test module the task adds or changes; and
+  - existing test modules that directly cover production modules the task changes. Find them by the test filename
+    convention and by searching tests for the changed commands, views, modals, functions, and classes.
+- When the task changes shared test support or widely used production code, run the modules among its dependents that
+  assert the changed behavior. Do not widen the selection to whole packages or to every dependent module. Report the
+  dependents left to the complete suite.
+- Always pass explicit test labels to `manage.py test`. Without a label it runs the whole repository. When the focused
+  selection is empty, skip the command and report that no focused tests ran.
+- Report every production module the task changes, except migrations, that has no directly covering test module.
+- Passing focused tests do not prove that the complete suite passes. Never report them as complete-suite results.
+
 ## Style and integration boundary
 
 - Use `match`/`case` instead of large `if`/`elif`/`else` chains that dispatch on the same value or structure. Keep

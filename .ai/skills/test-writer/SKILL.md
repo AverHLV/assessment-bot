@@ -2,7 +2,7 @@
 name: test-writer
 description: >-
   Write and run tests for an implemented SDD specification. Use when non-committed production changes must be mapped
-  to the specification, covered with behavior-focused tests, formatted, and verified with the complete test suite
+  to the specification, covered with behavior-focused tests, formatted, and verified with focused task-related tests
   while unrelated working-tree changes are preserved.
 ---
 
@@ -16,8 +16,9 @@ and task-related non-committed production changes as the implementation result.
 - Require one readable specification under `.ai/specs/`; never change it.
 - Make intentional edits only to tests and test-support code. Do not fix production defects exposed by valid tests.
 - Preserve existing changes. Formatting may modify production files only as a formatter side effect; report it.
-- Use the Makefile for formatting and the complete suite. Run targeted tests only in the application container with
-  the designated interpreter.
+- Use the Makefile for formatting. Run only focused tests, as the shared test-writing guidelines define them, in the
+  application container with the designated interpreter. Do not run the complete suite unless the user explicitly
+  requests it.
 
 ## Select the task and implementation
 
@@ -75,15 +76,14 @@ Run every command from the repository root:
    targeted checks as provisional until those checks provide evidence.
 2. Run `make container@start`, then `make project@format`. No extra environment variables or input data are required;
    formatting updates files in place. Fix only test-related failures and report production-file side effects.
-3. For iteration, run targeted tests through `make container@console` with
-   `/opt/venv/app-4PlAip0Q/bin/python manage.py test --no-input <test-label>`, where the label is a dotted module,
-   class, or method path such as `bot.tests.test_commands_rate`. The input is the selected test label and output is
-   written to the terminal. Use the results to resolve provisional omissions: add deterministic coverage or finalize the
-   documented justification before the complete-suite run and final report. Rerun formatting if tests changed.
-   A targeted run never replaces the complete suite.
-4. Run `make project@test` unconditionally. It starts required services, needs no extra environment variables, reads
-   repository tests and test data, and writes coverage output to the locations configured by the project.
-5. Fix failures caused by test or test-support code and rerun the complete suite. Keep a valid failing assertion when
+3. For iteration, run the affected focused tests through `make container@console` with
+   `/opt/venv/app-4PlAip0Q/bin/python manage.py test --no-input <test-label>...`, where each label is a dotted module,
+   class, or method path such as `bot.tests.test_commands_rate`. The input is the selected test labels and output is
+   written to the terminal. Use the results to resolve provisional omissions: add deterministic coverage or finalize
+   the documented justification before the final focused run and report. Rerun formatting if tests changed.
+4. After the last edit and formatting, run all focused tests in one final run with the same command. Skip it when the
+   focused selection is empty.
+5. Fix failures caused by test or test-support code and rerun all focused tests. Keep a valid failing assertion when
    it exposes an implementation or specification defect; do not weaken it or change production code.
 6. Call a failure pre-existing only with task-independent evidence. Otherwise report it as unresolved.
 7. Compare the final tree with the recorded initial state and confirm intentional edits are limited to tests and test
@@ -93,5 +93,8 @@ Add at most one `.ai/memories/` entry only for a verified, non-obvious, reusable
 history, assumptions, or facts already documented by the project.
 
 Report the specification and implementation covered; changed test files; coverage of explicit cases, negative paths,
-state, mocks, and queries; formatting and complete-suite results; defects, gaps, unresolved failures, formatter
-effects, or assumptions; stability omissions with their rationale and evidence locations; and any memory entry.
+state, mocks, and queries; formatting results; the focused test labels and their results, or that none ran; changed
+production modules without a covering test module; dependents left to the complete suite; defects, gaps, unresolved
+failures, formatter effects, or assumptions; stability omissions with their rationale and evidence locations; and any
+memory entry. State whether the complete suite ran; when it did not, state that it remains to be run after the review
+passes.

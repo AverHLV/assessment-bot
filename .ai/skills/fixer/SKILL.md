@@ -2,7 +2,7 @@
 name: fixer
 description: >-
   Fix the findings of a saved SDD verification review in one pass. Use when `.ai/reviews/review-<task-slug>.md` exists
-  and its findings in production code and tests must be fixed, formatted, and checked with the complete test suite
+  and its findings in production code and tests must be fixed, formatted, and checked with focused task-related tests
   without rerunning the earlier pipeline stages.
 ---
 
@@ -19,6 +19,8 @@ specification remains the acceptance authority. Work from the artifacts alone, w
 - Never drop, merge, or reinterpret a finding. When a finding cannot or should not be fixed, say so in the
   `Fix Report` with the reason.
 - Do not add or update dependencies, and do not write an implementation plan.
+- Run only focused tests, as the shared test-writing guidelines define them. Do not run the complete suite unless the
+  user explicitly requests it.
 
 ## Select the task and the work list
 
@@ -78,11 +80,12 @@ Run every command from the repository root:
 
 1. Run `make container@start`, then `make project@format`. No extra environment variables or input data are required;
    formatting updates files in place.
-2. For iteration, run targeted tests through `make container@console` with
-   `/opt/venv/app-4PlAip0Q/bin/python manage.py test --no-input <test-label>`, where the label is a dotted module,
-   class, or method path such as `bot.tests.test_commands_rate`. The input is the selected test label and output is
+2. For iteration, run the affected focused tests through `make container@console` with
+   `/opt/venv/app-4PlAip0Q/bin/python manage.py test --no-input <test-label>...`, where each label is a dotted module,
+   class, or method path such as `bot.tests.test_commands_rate`. The input is the selected test labels and output is
    written to the terminal.
-3. Run `make project@test` unconditionally. Fix failures caused by this pass and rerun the complete suite. Report any
+3. After the last edit and formatting, run all focused tests of the task in one final run with the same command. Skip
+   it when the focused selection is empty. Fix failures caused by this pass and rerun all focused tests. Report any
    other failure as unresolved; call it pre-existing only with task-independent evidence.
 4. When a fix changed a query budget and the plan file has an `Implementation Record`, update the final query budget
    there.
@@ -103,5 +106,8 @@ the status. Record an entry that the review itself marks `Declined` as `Declined
 earlier `Fix Report` already settled. Only `Fixed`, `Fixed — developer approved: <scope>`, and `Declined` are settled.
 An ID without a row is an error; add the row before finishing.
 
-Report the same table; the changed files; the formatting and complete-suite results; unresolved failures; and required
-specification revisions. State that the result is unverified until a new `verifier` run in a fresh session.
+Report the same table; the changed files; the formatting results; the focused test labels and their results, or
+that none ran; changed production modules without a covering test module; dependents left to the complete suite;
+unresolved failures; and required specification revisions. State whether the complete suite ran; when it did not, state
+that it remains to be run after the review passes. State that the result is unverified until a new `verifier` run in a
+fresh session.
